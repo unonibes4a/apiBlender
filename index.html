@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+   
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+ 
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+ 
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+ 
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+ 
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+</style>
+    <title>API Viewer</title>
+
+    <style>
+        * {
+ 
+}
+
+        body {
+            background: rgb(255, 255, 255);
+            background: linear-gradient(90deg, rgba(198,191,191,1) 0%, rgba(250,250,250,0.5130427170868348) 37%);
+          
+            
+}
+body *{
+    cursor: url('./a.png'), auto;
+}
+
+.container {
+    position: absolute;
+    top: 0%;
+    left: 10%;
+     width: 100%;
+    min-width: 250px;
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+ 
+
+    overflow: scroll;
+    cursor: url('./a.png'), auto;
+
+ 
+}
+
+h1 {
+    text-align: center;
+    background-color: #ffffff;
+    color: #a6c6e7;
+}
+
+ 
+
+.class-item {
+    background: #ddd;
+    padding: 10px;
+    margin: 5px 0;
+    cursor: pointer;
+    border-radius: 5px;
+    cursor: url('./a.png'), auto;
+}
+
+.method-list {
+    margin-left: 15px;
+}
+button{
+    cursor: url('./a.png'), auto;   
+}
+a{
+    cursor: url('./a.png'), auto;
+}
+.method-item {
+    background: #eee;
+    padding: 8px;
+    margin: 3px 0;
+    cursor: pointer;
+    border-radius: 5px;
+ 
+    cursor: url('./a.png'), auto;
+}
+
+.method-item:hover{
+    background: #79766a83;
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.popup-content {
+    text-align: center;
+}
+
+pre {
+    background: #f8f8f8;
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+    max-height: 200px;
+    overflow: auto;
+}
+
+button {
+    padding: 8px 12px;
+    margin: 5px;
+    border: none;
+    background: #007BFF;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.css-input {
+     padding: 5px;
+     font-size: 22px;
+     border-width: 20px;
+     border-color: #CCCCCC;
+     background-color: #FFFFFF;
+     color: #000000;
+     border-style: solid;
+     border-radius: 0px;
+     box-shadow: 0px 0px 9px rgba(66,66,66,.75);
+     text-shadow: 0px 0px 20px rgba(66,66,66,.100);
+}
+ .css-input:focus {
+     outline:none;
+}
+.clh4{
+    
+ color: #0000002d;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1> API de blender  avanzado </h1>
+        <h4 class="clh4">Desarollador giovanni rodriguez diaz</h4>
+        <input type="text" id="search" class="css-input " placeholder="Buscar clases o métodos...">
+        <div id="content"></div>
+    </div>
+
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <h3 id="popup-title"></h3>
+            <pre id="popup-code"></pre>
+            <button id="copy-btn">Copiar</button>
+            <button onclick="GioApp.closePopup()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+
+
+class GioApp{
+
+ static apiData =null;
+ static texodeunico=null;
+  static  parsePythonCode=(code)=> {
+    let lines = code.split('\n');
+    let apiData = {};
+    let currentClass = null;
+    let classCode = [];
+    let methodCode = {};
+    
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+
+        let classMatch = line.match(/^class\s+(\w+)/);
+        if (classMatch) {
+            currentClass = classMatch[1];
+            apiData[currentClass] = { methods: {}, fullCode: '' };
+            classCode = [line];
+            methodCode = {};
+        } 
+        
+        if (currentClass) {
+            classCode.push(line);
+
+            let methodMatch = line.match(/^\s*def\s+(\w+)\s*\(/);
+            if (methodMatch) {
+                let methodName = methodMatch[1];
+                methodCode[methodName] = [line];
+            } 
+            
+            else if (Object.keys(methodCode).length > 0) {
+                let lastMethod = Object.keys(methodCode).pop();
+                methodCode[lastMethod].push(line);
+            }
+        }
+
+        if (currentClass) {
+            apiData[currentClass].fullCode = classCode.join('\n');
+            apiData[currentClass].methods = methodCode;
+        }
+    }
+    return apiData;
+}
+
+static limpiarContenido=(elementId="content") =>{
+    let elemento = document.getElementById(elementId);
+    if (elemento) {
+        elemento.innerHTML = "";
+    }
+}
+static ini=()=>{
+    GioApp. limpiarContenido( "content");
+    GioApp. apiData  = GioApp. parsePythonCode( GioApp.texodeunico);
+      GioApp. renderClassesList( GioApp.apiData);
+      GioApp.  setupSearch( GioApp.apiData);
+}
+
+
+
+static renderClassesList=(apiData)=> {
+    let content = document.getElementById("content");
+    content.innerHTML = "";
+
+    Object.keys(apiData).forEach(className => {
+        let classDiv = document.createElement("div");
+        classDiv.classList.add("class-item");
+        classDiv.innerHTML = `<strong>${className}</strong>`;
+        classDiv.onclick = () => GioApp. showPopup(className, apiData[className].fullCode);
+
+        let methodList = document.createElement("div");
+        methodList.classList.add("method-list");
+
+        Object.keys(apiData[className].methods).forEach(methodName => {
+            let methodDiv = document.createElement("div");
+            methodDiv.classList.add("method-item");
+            methodDiv.innerHTML = methodName;
+            methodDiv.onclick = (e) => {
+                e.stopPropagation();
+               GioApp. showPopup(methodName, apiData[className].methods[methodName].join('\n'));
+            };
+            methodList.appendChild(methodDiv);
+        });
+
+        classDiv.appendChild(methodList);
+        content.appendChild(classDiv);
+    });
+}
+
+
+  
+
+static showPopup=(title, code) =>{
+    let popup = document.getElementById("popup");
+    let popupTitle = document.getElementById("popup-title");
+    let popupCode = document.getElementById("popup-code");
+    let copyBtn = document.getElementById("copy-btn");
+
+    popupTitle.innerText = title;
+    popupCode.innerText = code;
+    copyBtn.onclick = () => GioApp. copyToClipboard(code);
+
+    popup.style.display = "block";
+}
+
+static closePopup=() =>{
+    document.getElementById("popup").style.display = "none";
+}
+
+static copyToClipboard=(text)=> {
+    navigator.clipboard.writeText(text).then(() => alert("Copiado al portapapeles"));
+}
+
+static setupSearch=(apiData)=> {
+    let searchInput = document.getElementById("search");
+   
+ 
+
+    searchInput.oninput= () => {
+        let query = searchInput.value.toLowerCase();
+        let content = document.getElementById("content");
+       // content.innerHTML = "";
+if(searchInput.value==""){
+    GioApp. ini();
+
+}
+else{
+    Object.keys(apiData).forEach(className => {
+            if (className.toLowerCase().includes(query) ||
+                Object.keys(apiData[className].methods).some(method => method.toLowerCase().includes(query))) {
+                    GioApp.renderClassesList({ [className]: apiData[className] });
+            }
+        });  
+}
+         
+    }
+  
+}
+
+
+}
+         
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    fetch('a.gio')
+        .then(response => response.text())
+        .then(text => {
+            GioApp. texodeunico=text;
+           GioApp. ini()
+        })
+        .catch(error => console.error('Error cargando a.txt:', error));
+});
+
+
+ 
+
+  
+
+ 
+
+    </script>
+</body>
+</html>
