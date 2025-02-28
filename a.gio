@@ -1,3 +1,9 @@
+import bpy
+import bmesh
+import mathutils
+import numpy as np
+from math import radians
+
 
 class GioNode3d:
     """
@@ -343,108 +349,65 @@ class GioFunciones:
 class GioObjetos:
     
     
+  
+  
+             
+ 
     @staticmethod    
-    def alinear_objeto_con_vector(objeto, vector_direccion):
-        # Normalizar el vector dirección import mathutils
-        #from math import radians
-        vector_normalizado = vector_direccion.normalized()
+    def aligns_local_z_axis_of_Obj3d_with_vector3d(obj, direction):     
+        rot_quat = direction.to_track_quat('Z', 'Y')      
+        obj.rotation_euler = rot_quat.to_euler()
         
-        # Vector de referencia (eje Z)
-        eje_z = mathutils.Vector((0, 0, 1))
-        
-        # Calcular el ángulo y el eje de rotación
-        angulo = eje_z.angle(vector_normalizado)
-        
-        if angulo > 0.001:  # Si hay un ángulo significativo para rotar
-            # Calcular eje de rotación mediante producto cruz
-            eje_rotacion = eje_z.cross(vector_normalizado).normalized()
-            
-            # Crear cuaternión de rotación
-            rotacion = mathutils.Quaternion(eje_rotacion, angulo)
-            
-            # Aplicar la rotación al objeto
-            objeto.rotation_mode = 'QUATERNION'
-            objeto.rotation_quaternion = rotacion
-        else:
-            # Si los vectores son casi paralelos, no es necesario rotar
-            pass
-        
-        # Actualizar la escena
-        bpy.context.view_layer.update()
+    
+ 
 
-    
-    
     @staticmethod
-    def alinear_objeto_a_vector(objeto, vector_alineacion, eje='Z', espacio='GLOBAL'):
+    def aligns_local_x_axis_of_Obj3d_with_vector3d(obj, direction):
         """
-        Alinea el eje especificado del objeto al vector de alineación proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :param vector_alineacion: Vector hacia el cual se alineará el eje del objeto.
-        :param eje: Eje del objeto que se alineará ('X', 'Y' o 'Z').
-        :param espacio: Espacio de alineación ('GLOBAL' o 'LOCAL').
+           import bpy
+from mathutils import Vector
+Aligns the local X-axis of the object with the given direction vector.
+        """      
+        direction.normalize()     
+        rot_quat = direction.to_track_quat('X', 'Y')    
+        obj.rotation_euler = rot_quat.to_euler()
+         
+    @staticmethod
+    def aligns_local_y_axis_of_Obj3d_with_vector3d(obj, direction):
         """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
+       Aligns the local Y-axis of the object with the given direction vector.
+        """      
+        direction.normalize()       
+        rot_quat = direction.to_track_quat('Y', 'Z')
+    
+        obj.rotation_euler = rot_quat.to_euler()
+    
 
-        # Normalizar el vector de alineación
-        vector_alineacion = vector_alineacion.normalized()
-
-        # Definir el eje local del objeto a alinear
-        if eje == 'X':
-            eje_local = mathutils.Vector((1, 0, 0))
-        elif eje == 'Y':
-            eje_local = mathutils.Vector((0, 1, 0))
-        elif eje == 'Z':
-            eje_local = mathutils.Vector((0, 0, 1))
-        else:
-            raise ValueError("El eje debe ser 'X', 'Y' o 'Z'.")
-
-        # Convertir el eje local al espacio global si es necesario
-        if espacio == 'GLOBAL':
-            eje_local = objeto.matrix_world.to_3x3() @ eje_local
-
-        # Calcular la rotación necesaria
-        rotacion = eje_local.rotation_difference(vector_alineacion).to_euler()
-
-        # Aplicar la rotación al objeto
-        if espacio == 'GLOBAL':
-            objeto.rotation_euler = rotacion
-        elif espacio == 'LOCAL':
-            # Convertir las rotaciones Euler a matrices de rotación
-            matriz_rotacion_objeto = objeto.rotation_euler.to_matrix().to_4x4()
-            matriz_rotacion_nueva = rotacion.to_matrix().to_4x4()
-            # Multiplicar las matrices de rotación
-            matriz_resultante = matriz_rotacion_objeto @ matriz_rotacion_nueva
-            # Actualizar la rotación del objeto con la matriz resultante
-            objeto.rotation_euler = matriz_resultante.to_euler()
-        else:
-            raise ValueError("El espacio debe ser 'GLOBAL' o 'LOCAL'.")
-        
+     
     @staticmethod 
     def duplicar_objeto_completamente(objeto_original):
         """
-        Duplica un objeto en Blender, creando copias independientes de su malla, materiales y animaciones.
+     Duplicates an object in Blender, creating independent copies of its mesh, materials, and animations.
 
-        :param objeto_original: El objeto a duplicar.
-        :return: El nuevo objeto duplicado.
+:param original_object: The object to duplicate.
+:return: The new duplicate object.
         """
-        # Crear una copia del objeto
+    
         objeto_duplicado = objeto_original.copy()
         
-        # Crear una copia independiente de los datos de la malla
+      
         if objeto_duplicado.data:
             objeto_duplicado.data = objeto_duplicado.data.copy()
         
-        # Crear copias independientes de los materiales
+ 
         if objeto_duplicado.data.materials:
             objeto_duplicado.data.materials = [mat.copy() for mat in objeto_duplicado.data.materials]
         
-        # Crear una copia independiente de la acción (animación)
+    
         if objeto_duplicado.animation_data and objeto_duplicado.animation_data.action:
             objeto_duplicado.animation_data.action = objeto_duplicado.animation_data.action.copy()
         
-        # Limpiar cualquier dato de animación no deseado
+    
         objeto_duplicado.animation_data_clear()
         
         # Enlazar el nuevo objeto a la colección actual
@@ -987,3 +950,128 @@ class Gio:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###elementos
+varobj_uno_pos=None
+varobj_dos_pos=None
+  
+def callbackobj_uno_pos(self,context):
+    global varobj_uno_pos 
+    varobj_uno_pos= context.scene.obj_uno_pos
+    if varobj_uno_pos:
+        print(f"Objeto seleccionado 1: {varobj_uno_pos.name}")
+
+def callbackobj_dos_pos(self,context):
+    global varobj_dos_pos 
+  
+    varobj_dos_pos = context.scene.obj_dos_pos
+    if varobj_dos_pos:
+        print(f"Objeto seleccionado 2: {varobj_dos_pos.name}")
+     
+def onclikposicitonobjet1():
+    pasosdelProyectoposicionarobjetos1()
+    pass  
+    
+    pass
+def crerElementos():
+    bpy.types.Scene.obj_uno_pos= Gio.seleccionar_objeto("nombre obj_uno_pos","",callbackobj_uno_pos);
+    bpy.types.Scene.obj_dos_pos= Gio.seleccionar_objeto("nombre obj_dos_poss","",callbackobj_dos_pos);
+    pass  
+    
+
+def deleteElementos():
+    
+    del bpy.types.Scene.obj_uno_pos
+    
+    pass    
+
+ 
+
+ 
+    
+ 
+def pasosdelProyectoposicionarobjetos1():
+    global varobj_uno_pos 
+    global varobj_dos_pos 
+    normalenlacara=GioMesh.obtener_normal_cara(varobj_dos_pos) 
+    GioObjetos. alinear_objeto_con_vector(varobj_uno_pos,normalenlacara);
+    
+ 
+ 
+ 
+    print(normalenlacara)
+    print(normalenlacara[0])
+    print("normalenlacara[0]")
+     
+    
+     
+    pass
+# Panel personalizado en la región 'UI'
+class CustomPanelPos(bpy.types.Panel):
+    bl_label = "Panel Personalizado"
+    bl_idname = "VIEW3D_PT_custom_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Tool"
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+ 
+        
+        Gio.addNoBoton(layout,scene,"obj_uno_pos");
+        Gio.addNoBoton(layout,scene,"obj_dos_pos");
+        Gio.boton( layout,"posicionar objeto","onclikposicitonobjet1");
+
+# Registro de clases
+classes = [GioBotonSimple,  CustomPanelPos]
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+    crerElementos()
+
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+    # Eliminar propiedades del contexto de la escena
+    deleteElementos();
+
+if __name__ == "__main__":
+    register()
