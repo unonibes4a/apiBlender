@@ -339,59 +339,123 @@ class GioFunciones:
         # Seleccionar el objeto especificado
         objeto.select_set(True)
 
-        # Establecer el objeto como activo
+      
         bpy.context.view_layer.objects.active = objeto
 
   
  
    
 
-class GioObjetos:
+class GioObject:
     
     
-  
+ 
+    @staticmethod  
+    def create_transformation_matrix(object_name, normal, up=Vector((0, 0, 1)), center=None):
+        """
+        import bpy
+        from mathutils import Vector, Matrix
+        Creates a transformation matrix based on a normal vector and applies it to a given object.
+
+        Args:
+            object_name (str): The name of the object to transform.
+            normal (Vector): The normal vector used to orient the transformation.
+            up (Vector, optional): The up vector for the transformation. Defaults to (0, 0, 1).
+            center (Vector, optional): The center point for the transformation. 
+                                        If None, only rotation is applied; otherwise, translation is included.
+
+        Returns:
+            Matrix: The calculated transformation matrix.  Returns None if the object is not found.
+        """
+
+        try:
+            obj = bpy.data.objects[object_name]
+        except KeyError:
+            print(f"Object '{object_name}' not found.")
+            return None
+
+       
+        if abs(normal.x) < 0.999:
+            forward = Vector((1, 0, 0))
+        else:
+            forward = Vector((0, 1, 0))
+
+        right = forward.cross(up).normalized()
+        forward = up.cross(right).normalized()
+
+        if center is None:  # Apply only rotation
+            transform_matrix = Matrix((
+                (right.x, up.x, forward.x, 0.0),
+                (right.y, up.y, forward.y, 0.0),
+                (right.z, up.z, forward.z, 0.0),
+                (0.0, 0.0, 0.0, 1.0),
+            ))
+            obj.matrix_world = obj.matrix_world @ transform_matrix  
+
+
+        else:   
+            transform_matrix = Matrix((
+                (right.x, up.x, forward.x, center.x),
+                (right.y, up.y, forward.y, center.y),
+                (right.z, up.z, forward.z, center.z),
+                (0.0, 0.0, 0.0, 1.0),
+            ))
+            obj.matrix_world = transform_matrix
+
+        return transform_matrix
   
              
- 
-    @staticmethod    
-    def aligns_local_z_axis_of_Obj3d_with_vector3d(obj, direction):     
-        rot_quat = direction.to_track_quat('Z', 'Y')      
+
+    @staticmethod
+    def aligns_local_z_axis_of_Obj3d_with_vector3d(obj, direction):
+        """
+        from mathutils import Matrix, Vector
+        Aligns the local Z-axis of a 3D object with a given direction vector.
+
+        Args:
+        obj: The 3D object (Blender object) to rotate.
+        direction (Vector): The target direction vector. The object's 
+                            local Z-axis will be aligned with this vector.
+        """
+        rot_quat = direction.to_track_quat('Z', 'Y')
         obj.rotation_euler = rot_quat.to_euler()
-        
-    
- 
+
 
     @staticmethod
     def aligns_local_x_axis_of_Obj3d_with_vector3d(obj, direction):
         """
-           import bpy
-from mathutils import Vector
-Aligns the local X-axis of the object with the given direction vector.
-        """      
-        direction.normalize()     
-        rot_quat = direction.to_track_quat('X', 'Y')    
+        from mathutils import Matrix, Vector
+        
+        Aligns the local X-axis of a 3D object with a given direction vector.
+
+        Args:
+        obj: The 3D object (Blender object) to rotate.
+        direction (Vector): The target direction vector. The object's
+                            local X-axis will be aligned with this vector.
+        """
+        direction.normalize()
+        rot_quat = direction.to_track_quat('X', 'Y')
         obj.rotation_euler = rot_quat.to_euler()
-         
+
+
     @staticmethod
     def aligns_local_y_axis_of_Obj3d_with_vector3d(obj, direction):
         """
-       Aligns the local Y-axis of the object with the given direction vector.
-        """      
-        direction.normalize()       
-        rot_quat = direction.to_track_quat('Y', 'Z')
-    
-        obj.rotation_euler = rot_quat.to_euler()
-    
+        from mathutils import Matrix, Vector
+        Aligns the local Y-axis of a 3D object with a given direction vector.
 
+        Args:
+            obj: The 3D object (Blender object) to rotate.
+            direction (Vector): The target direction vector. The object's
+                            local Y-axis will be aligned with this vector.
+        """
+        direction.normalize()
+        rot_quat = direction.to_track_quat('Y', 'Z')
+        obj.rotation_euler = rot_quat.to_euler()
      
     @staticmethod 
     def duplicar_objeto_completamente(objeto_original):
-        """
-     Duplicates an object in Blender, creating independent copies of its mesh, materials, and animations.
-
-:param original_object: The object to duplicate.
-:return: The new duplicate object.
-        """
+  
     
         objeto_duplicado = objeto_original.copy()
         
@@ -410,7 +474,7 @@ Aligns the local X-axis of the object with the given direction vector.
     
         objeto_duplicado.animation_data_clear()
         
-        # Enlazar el nuevo objeto a la colección actual
+        
         bpy.context.collection.objects.link(objeto_duplicado)
         return objeto_duplicado
     
@@ -430,9 +494,9 @@ import mathutils
         if espacio_local:
             objeto.scale = factor_escala
         else:
-            # Crear la matriz de escala
+          
             matriz_escala = mathutils.Matrix.Diagonal(factor_escala).to_4x4()
-            # Aplicar la escala en el espacio global
+      
             objeto.matrix_world = matriz_escala @ objeto.matrix_world
 
  
