@@ -103,7 +103,7 @@ a{
 .popup {
     display: none;
     position: fixed;
-    top: 50%;
+    top: 37%;
     left: 50%;
     transform: translate(-50%, -50%);
     background: white;
@@ -170,6 +170,35 @@ button:hover {
     z-index: -1;
 }
 
+#idComentarios{
+    position: absolute;
+    bottom:  -150px;
+    left:   0%;
+  width: 100% ;
+ min-height: 150px;
+  border: 1px solid #b1b1b1;
+  background-color: hsla(0, 0%, 0%, 0.31);
+  overflow-y: scroll;
+  display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: stretch;
+	align-content: stretch;
+ 
+}
+#idcom{
+    width: 80%;
+    height: 90%;
+ 
+    color: #000000;
+
+    text-align: left;
+    font-size: 17px;
+ 
+
+}
+
     </style>
 </head>
 <body>
@@ -179,7 +208,7 @@ button:hover {
         <h1> API de blender  avanzado </h1>
         <h4 class="clh4">Desarollador giovanni rodriguez diaz</h4>
         <input type="text" id="search" class="css-input " placeholder="Buscar clases o métodos...">
-        <div id="content"></div>
+        <p id="content"></p>
     </div>
 
     <div id="popup" class="popup">
@@ -188,7 +217,16 @@ button:hover {
             <pre id="popup-code"></pre>
             <button id="copy-btn">Copiar</button>
             <button onclick="GioApp.closePopup()">Cerrar</button>
+            <div id="idComentarios">
+                <div id="idcom">
+
+
+                </div>
+
+
+            </div>
         </div>
+       
     </div>
 
     <script>
@@ -236,8 +274,21 @@ class GioApp{
             apiData[currentClass].methods = methodCode;
         }
     }
+ 
+
+ 
     return apiData;
 }
+
+static   extraerComentariosPython=(texto) =>{
+    const regex = /\"\"\"[\s\S]*?\"\"\"/g;
+    const comentarios = texto.match(regex);
+
+    if (!comentarios) return "";
+
+    return comentarios.join("\n\n");
+}
+
 
 static limpiarContenido=(elementId="content") =>{
     let elemento = document.getElementById(elementId);
@@ -262,7 +313,10 @@ static renderClassesList=(apiData)=> {
         let classDiv = document.createElement("div");
         classDiv.classList.add("class-item");
         classDiv.innerHTML = `<strong>${className}</strong>`;
-        classDiv.onclick = () => GioApp. showPopup(className, apiData[className].fullCode);
+        classDiv.onclick = () =>{
+             GioApp. showPopup(className, apiData[className].fullCode); 
+              
+    }
 
         let methodList = document.createElement("div");
         methodList.classList.add("method-list");
@@ -273,7 +327,7 @@ static renderClassesList=(apiData)=> {
             methodDiv.innerHTML = methodName;
             methodDiv.onclick = (e) => {
                 e.stopPropagation();
-               GioApp. showPopup(methodName, apiData[className].methods[methodName].join('\n'));
+               GioApp. showPopup(methodName, apiData[className].methods[methodName].join('\n'),className);
             };
             methodList.appendChild(methodDiv);
         });
@@ -286,7 +340,9 @@ static renderClassesList=(apiData)=> {
 
   
 
-static showPopup=(title, code) =>{
+static showPopup=(title, code,className) =>{
+
+   
     let popup = document.getElementById("popup");
     let popupTitle = document.getElementById("popup-title");
     let popupCode = document.getElementById("popup-code");
@@ -297,6 +353,8 @@ static showPopup=(title, code) =>{
     copyBtn.onclick = () => GioApp. copyToClipboard(code);
 
     popup.style.display = "block";
+
+    document.getElementById("idcom").textContent=   GioApp. extraerComentariosPython(GioApp. apiData[className].methods[title].toString());
 }
 
 static closePopup=() =>{
@@ -345,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
             GioApp. texodeunico=text;
            GioApp. ini()
         })
-        .catch(error => console.error('Error cargando a.txt:', error));
+        .catch(error => console.error('Error cargando a.gio:', error));
 });
 
 
