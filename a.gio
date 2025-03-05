@@ -951,7 +951,7 @@ class Gio:
       
 
     @staticmethod
-    def seleccionar_objeto(name, description, update_callback):
+    def seleccionar_objeto(name, description, update_callback=None): 
         return bpy.props.PointerProperty(
             name=name,
             description=description,
