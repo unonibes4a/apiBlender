@@ -5,6 +5,57 @@ import numpy as np
 from math import radians
 
 
+
+
+
+class SelectObj:
+    
+    @staticmethod
+    def get_selected_objects():   
+        selected_objects = bpy.context.selected_objects
+        return selected_objects
+    @staticmethod
+    def get_selected_bones_names():     
+        if bpy.context.mode == 'POSE':            
+            armature_obj = bpy.context.active_object          
+            if armature_obj and armature_obj.type == 'ARMATURE': 
+                selected_bones = [bone.name for bone in armature_obj.data.bones if bone.select]
+                return selected_bones
+            else:
+                return "El objeto activo no es una Armadura."
+        else:
+            return "No estás en Pose Mode."
+    @staticmethod
+    def get_selected_bones():
+        if bpy.context.mode == 'POSE':
+         
+            armature_obj = bpy.context.active_object
+            
+          
+            if armature_obj and armature_obj.type == 'ARMATURE':
+            
+                selected_bones = [bone for bone in armature_obj.pose.bones if bone.bone.select]
+                return selected_bones
+            else:
+                return "El objeto activo no es una Armadura."
+        else:
+            return "No estás en Pose Mode."
+  
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class GioNode3d:
     """
     Clase estática para convertir funcionalidades de Godot a Blender.
