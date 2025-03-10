@@ -46,6 +46,232 @@ class SelectObj:
 
 
 
+class Bone:
+    
+    @staticmethod   
+    def set_bone_rotation_ejes_string_ARRAYS(bones, rotation_degrees, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        Aplica una rotación a una lista de huesos en el eje especificado.
+
+        Parámetros:
+        bones (list): Lista de huesos (pose bones) a los que se aplicará la rotación.
+        rotation_degrees (int, float o tuple): Grados de rotación. Si es un solo número, se aplica a todos los ejes.
+        Si es una tupla de 3 valores, se aplica a los ejes X, Y, Z respectivamente.
+        axis (str): Eje de rotación ('X', 'Y', 'Z'). Por defecto es 'X'.
+        orientation (str): Orientación de la transformación ('LOCAL', 'GLOBAL', etc.). Por defecto es 'LOCAL'.
+        pivot_point (str): Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        Por defecto es 'INDIVIDUAL_ORIGINS'.
+
+        Uso:
+        from math import radians
+        import bpy
+
+        # Obtener los huesos seleccionados
+        selected_bones = bpy.context.selected_pose_bones
+
+        if selected_bones:
+        set_bone_rotation_ejes_string__ARRAYS(selected_bones, 20, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS')
+        else:
+        print("No hay huesos seleccionados.")
+
+        Librerías necesarias:
+        - bpy: Módulo de Blender para manipular objetos y huesos.
+        - math.radians: Para convertir grados a radianes.
+        
+        
+        
+        
+        
+        import bpy
+        from math import radians selected_bones = get_selected_bones()
+            if selected_bones:
+        set_bone_rotation_ejes_string(selected_bones, 20, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS' #MEDIAN_POINT)
+        else:
+            print("No hay huesos seleccionados.")
+
+        """
+        bpy.context.active_pose_bone.rotation_mode = 'XYZ'
+
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+         
+        if isinstance(rotation_degrees, (int, float)):
+            rotation_degrees = (rotation_degrees, rotation_degrees, rotation_degrees)
+
+        for bone in bones:
+            bpy.context.view_layer.objects.active = bpy.context.active_object
+            bpy.ops.object.posemode_toggle()
+            bpy.ops.object.posemode_toggle()
+
+            if axis == "X":
+                bone.rotation_euler.x = radians(rotation_degrees[0])
+            if axis == "Y":
+                bone.rotation_euler.y = radians(rotation_degrees[1])
+            if axis == "Z":
+                bone.rotation_euler.z = radians(rotation_degrees[2])
+
+            bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
+        
+    
+
+    @staticmethod 
+    def rotate_bones_advanced_ARRAYS(bones, rotation_degrees, orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        import bpy
+        from math import radians
+        
+
+        Aplica una rotación avanzada a una lista de huesos en los tres ejes (X, Y, Z).
+
+        Parámetros:
+        bones (list): Lista de huesos (pose bones) a los que se aplicará la rotación.
+        rotation_degrees (tuple): Grados de rotación para los ejes X, Y, Z (debe ser una tupla de 3 valores).
+        orientation (str): Orientación de la transformación ('LOCAL', 'GLOBAL', etc.). Por defecto es 'LOCAL'.
+        pivot_point (str): Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        Por defecto es 'INDIVIDUAL_ORIGINS'.
+
+        Uso:
+        from math import radians
+        import bpy
+
+        # Obtener los huesos seleccionados
+        selected_bones = bpy.context.selected_pose_bones
+
+        if selected_bones:
+        rotate_bones_advanced_ARRAYS(selected_bones, (10, 20, 30), orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS')
+        else:
+        print("No hay huesos seleccionados.")
+
+        Librerías necesarias:
+        - bpy: Módulo de Blender para manipular objetos y huesos.
+        - math.radians: Para convertir grados a radianes.
+            selected_bones = get_selected_bones()
+            if selected_bones:
+                set_bone_rotation_ejes_string(selected_bones, 20, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS') #MEDIAN_POINT
+            else:
+                print("No hay huesos seleccionados.")
+            
+            
+        """
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+        for bone in bones:
+            bpy.context.view_layer.objects.active = bpy.context.active_object
+            bpy.ops.object.posemode_toggle()
+            bpy.ops.object.posemode_toggle()
+
+            bpy.ops.transform.rotate(
+                value=radians(rotation_degrees[0]), 
+                orient_axis='X', 
+                orient_type=orientation,
+                constraint_axis=(True, False, False)
+            )
+            bpy.ops.transform.rotate(
+                value=radians(rotation_degrees[1]), 
+                orient_axis='Y', 
+                orient_type=orientation,
+                constraint_axis=(False, True, False)
+            )
+            bpy.ops.transform.rotate(
+                value=radians(rotation_degrees[2]), 
+                orient_axis='Z', 
+                orient_type=orientation,
+                constraint_axis=(False, False, True)
+            )
+            bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
+        
+        
+        
+    
+    
+    @staticmethod
+    def set_bone_rotation_ejes_string_SINGLE(bone, rotation_degrees, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        import bpy
+        from math import radians
+        Aplica una rotación a un solo hueso en el eje especificado.
+
+        :param bone: El hueso al que se le aplicará la rotación.
+        :param rotation_degrees: Grados de rotación (puede ser un solo valor o una tupla de 3 valores).
+        :param axis: Eje de rotación ('X', 'Y', 'Z').
+        :param orientation: Orientación de la transformación ('LOCAL', 'GLOBAL', etc.).
+        :param pivot_point: Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        """
+         
+
+        bpy.context.active_pose_bone.rotation_mode = 'XYZ'
+
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+        if isinstance(rotation_degrees, (int, float)):
+            rotation_degrees = (rotation_degrees, rotation_degrees, rotation_degrees)
+
+        bpy.context.view_layer.objects.active = bpy.context.active_object
+        bpy.ops.object.posemode_toggle()
+        bpy.ops.object.posemode_toggle()
+
+        if axis == "X":
+            bone.rotation_euler.x = radians(rotation_degrees[0])
+        if axis == "Y":
+            bone.rotation_euler.y = radians(rotation_degrees[1])
+        if axis == "Z":
+            bone.rotation_euler.z = radians(rotation_degrees[2])
+
+        bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
+
+
+    @staticmethod
+    def rotate_bone_advanced_SINGLE(bone, rotation_degrees, orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        import bpy
+        from math import radians
+        Aplica una rotación avanzada a un solo hueso en los tres ejes.
+
+        :param bone: El hueso al que se le aplicará la rotación.
+        :param rotation_degrees: Grados de rotación (debe ser una tupla de 3 valores para X, Y, Z).
+        :param orientation: Orientación de la transformación ('LOCAL', 'GLOBAL', etc.).
+        :param pivot_point: Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        """
+         
+
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+        bpy.context.view_layer.objects.active = bpy.context.active_object
+        bpy.ops.object.posemode_toggle()
+        bpy.ops.object.posemode_toggle()
+
+        bpy.ops.transform.rotate(
+            value=radians(rotation_degrees[0]), 
+            orient_axis='X', 
+            orient_type=orientation,
+            constraint_axis=(True, False, False)
+        )
+        bpy.ops.transform.rotate(
+            value=radians(rotation_degrees[1]), 
+            orient_axis='Y', 
+            orient_type=orientation,
+            constraint_axis=(False, True, False)
+        )
+        bpy.ops.transform.rotate(
+            value=radians(rotation_degrees[2]), 
+            orient_axis='Z', 
+            orient_type=orientation,
+            constraint_axis=(False, False, True)
+        )
+
+        bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
 
 
 
