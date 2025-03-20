@@ -55,9 +55,9 @@ class SelectObj:
     
     @staticmethod
     def make_object_active(obj):      
-        bpy.ops.object.select_all(action='DESELECT')      
-        obj.select_set(True)
-        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.select_all(action='DESELECT') 
+        bpy.context.view_layer.objects.active = obj    
+        object_to_modify.select_set(True)
           
     
     
@@ -120,7 +120,28 @@ class SelectObj:
                 print("Modo no válido")
 
 
+class CreatorElementwidget ():
+    
+    @staticmethod
+    def datepicker_object(nameStringId="",onchenge=None,description="select"):
+        
+        """ 
+        
+def onchangeselecionaObjeto1(self, context):
+    global objt1selectPos   
+    objt1selectPos = context.scene.selected_object_1 
+    print(f"{objt1selectPos.name}")
+        bpy.types.Scene.selected_object_1 =crearInputSelectorGoteroObject("selecionaobj1",onchangeselecionaObjeto1)
+        """
 
+        return bpy.props.PointerProperty(
+        type=bpy.types.Object,
+        update=onchenge,
+        name=nameStringId,
+        description=description)
+        pass
+    
+    pass
 class Bone:
     
     @staticmethod   
