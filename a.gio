@@ -10,6 +10,46 @@ from math import radians
 
 class SelectObj:
     
+    
+    @staticmethod
+    def vertex_normal_and_faces_of_the_selected_edge():
+        obj = bpy.context.active_object        
+        if obj and obj.type == 'MESH':      
+            bpy.ops.object.mode_set(mode='EDIT')    
+        bm = bmesh.from_edit_mesh(obj.data)     
+        selected_faces = [f for f in bm.faces if f.select]
+        selected_verts = [v for v in bm.verts if v.select]
+        if len(selected_faces) == 1:  
+            face = selected_faces[0]
+            location = obj.matrix_world @ face.calc_center_median()
+            normal = obj.matrix_world.to_3x3() @ face.normal
+        elif len(selected_verts) == 1: 
+            vert = selected_verts[0]
+            location = obj.matrix_world @ vert.co
+            normal = obj.matrix_world.to_3x3() @ vert.normal           
+            pass
+        return normal
+     
+    @staticmethod
+    def object_select():
+        return bpy.context.active_object    
+        pass
+     
+    
+    @staticmethod
+    def make_object_active():
+        return bpy.context.active_object    
+        pass
+    
+    
+    @staticmethod
+    def aligned_obj(obj, normal, location):         
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj        
+        obj.location = location
+        obj.rotation_euler = normal.to_track_quat('Z', 'Y').to_euler()
+    
     @staticmethod
     def get_selected_objects():   
         selected_objects = bpy.context.selected_objects
