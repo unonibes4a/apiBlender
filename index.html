@@ -206,6 +206,18 @@ button:hover {
     right: 0%;
     z-index: -1;
 }
+.indpclas{
+    display:flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    width: 200px;
+    height: auto;
+}
+
+.clw{
+    width: 100%;
+    height: 100%;
+}
 
     </style>
 </head>
@@ -237,6 +249,16 @@ button:hover {
             </div>
         </div>
        
+    </div>
+
+    <div class="class-item" id="idpinfo">
+       <div class="clw">
+
+       <div id="salida"><div>import bpy</div><div></div><div># Variables globales</div><div>global_vars = {</div><div>    "selected_object_1": None,</div><div>    "selected_object_2": None,</div><div>    "slider_int_value": 5,</div><div>    "slider_float_value": 0.5,</div><div>    "checkbox_1": False,</div><div>    "checkbox_2": True,</div><div>    "dropdown_value": "Option1",</div><div>    "input_text": "Default Text"</div><div>}</div><div></div><div># Actualización de variables globales</div><div>def update_slider_int(self, context):</div><div>    global_vars["slider_int_value"] = self.slider_int_value</div><div></div><div>def update_slider_float(self, context):</div><div>    global_vars["slider_float_value"] = self.slider_float_value</div><div></div><div>def update_checkbox_1(self, context):</div><div>    global_vars["checkbox_1"] = self.checkbox_1</div><div></div><div>def update_checkbox_2(self, context):</div><div>    global_vars["checkbox_2"] = self.checkbox_2</div><div></div><div>def update_dropdown(self, context):</div><div>    global_vars["dropdown_value"] = self.dropdown_value</div><div></div><div>def update_input_text(self, context):</div><div>    global_vars["input_text"] = self.input_text</div><div></div><div># Definir propiedades</div><div>bpy.types.Scene.slider_int_value = bpy.props.IntProperty(</div><div>    name="Int Slider",</div><div>    default=5,</div><div>    min=0,</div><div>    max=10,</div><div>    update=update_slider_int</div><div>)</div><div></div><div>bpy.types.Scene.slider_float_value = bpy.props.FloatProperty(</div><div>    name="Float Slider",</div><div>    default=0.5,</div><div>    min=0.0,</div><div>    max=1.0,</div><div>    update=update_slider_float</div><div>)</div><div></div><div>bpy.types.Scene.checkbox_1 = bpy.props.BoolProperty(</div><div>    name="Checkbox 1",</div><div>    default=False,</div><div>    update=update_checkbox_1</div><div>)</div><div></div><div>bpy.types.Scene.checkbox_2 = bpy.props.BoolProperty(</div><div>    name="Checkbox 2",</div><div>    default=True,</div><div>    update=update_checkbox_2</div><div>)</div><div></div><div>bpy.types.Scene.dropdown_value = bpy.props.EnumProperty(</div><div>    name="Dropdown",</div><div>    items=[</div><div>        ("Option1", "Option 1", "First option"),</div><div>        ("Option2", "Option 2", "Second option"),</div><div>        ("Option3", "Option 3", "Third option")</div><div>    ],</div><div>    update=update_dropdown</div><div>)</div><div></div><div>bpy.types.Scene.input_text = bpy.props.StringProperty(</div><div>    name="Input Text",</div><div>    default="Default Text",</div><div>    update=update_input_text</div><div>)</div><div></div><div># Definir la clase del panel</div><div>class AdvancedPanel(bpy.types.Panel):</div><div>    bl_label = "Advanced Panel"</div><div>    bl_idname = "OBJECT_PT_advanced_panel"</div><div>    bl_space_type = 'VIEW_3D'</div><div>    bl_region_type = 'UI'</div><div>    bl_category = 'Tool'</div><div>    bl_context = "objectmode"</div><div>    bl_options = {'DEFAULT_CLOSED'}</div><div></div><div>    def draw(self, context):</div><div>        layout = self.layout</div><div>        scene = context.scene</div><div></div><div>        # DataPickers (Goteros)</div><div>        row = layout.row()</div><div>        row.label(text="DataPicker 1:")</div><div>        row.prop(context.scene, "selected_object_1", text="")</div><div></div><div>        row = layout.row()</div><div>        row.label(text="DataPicker 2:")</div><div>        row.prop(context.scene, "selected_object_2", text="")</div><div></div><div>        # Sliders</div><div>        layout.label(text="Sliders:")</div><div>        layout.prop(scene, "slider_int_value", slider=True)</div><div>        layout.prop(scene, "slider_float_value", slider=True)</div><div></div><div>        # Checkboxes</div><div>        layout.label(text="Checkboxes:")</div><div>        layout.prop(scene, "checkbox_1")</div><div>        layout.prop(scene, "checkbox_2")</div><div></div><div>        # Dropdown (Selector de opciones)</div><div>        layout.label(text="Dropdown:")</div><div>        layout.prop(scene, "dropdown_value", text="")</div><div></div><div>        # Input Text</div><div>        layout.label(text="Input Text:")</div><div>        layout.prop(scene, "input_text", text="")</div><div></div><div># Registrar y desregistrar clases</div><div>def register():</div><div>    bpy.utils.register_class(AdvancedPanel)</div><div>    bpy.types.Scene.selected_object_1 = bpy.props.PointerProperty(type=bpy.types.Object)</div><div>    bpy.types.Scene.selected_object_2 = bpy.props.PointerProperty(type=bpy.types.Object)</div><div></div><div>def unregister():</div><div>    bpy.utils.unregister_class(AdvancedPanel)</div><div>    del bpy.types.Scene.selected_object_1</div><div>    del bpy.types.Scene.selected_object_2</div><div></div><div>if __name__ == "__main__":</div><div>    register()</div></div>
+    
+    
+    
+    </div> 
     </div>
 
     <script>
@@ -412,6 +434,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(text => {
             GioApp. texodeunico=text;
            GioApp. ini()
+
+           setTimeout(() => {
+            addinfop();
+           }, 3000);
         })
         .catch(error => console.error('Error cargando a.gio:', error));
 });
@@ -421,7 +447,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   
 
- 
+ function addinfop(){
+    document.getElementById("content").appendChild(document.getElementById("idpinfo"));
+ }
 
     </script>
 </body>
