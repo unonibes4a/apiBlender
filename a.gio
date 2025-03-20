@@ -54,9 +54,12 @@ class SelectObj:
      
     
     @staticmethod
-    def make_object_active():
-        return bpy.context.active_object    
-        pass
+    def make_object_active(obj):      
+        bpy.ops.object.select_all(action='DESELECT')      
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+          
+    
     
     
     @staticmethod
@@ -99,7 +102,22 @@ class SelectObj:
             return "No estás en Pose Mode."
   
  
-
+    @staticmethod
+    def change_mode(modo):
+        obj = bpy.context.active_object
+        if obj:
+            if modo == 'EDIT':
+                bpy.ops.object.mode_set(mode='EDIT')
+            elif modo == 'SCULPT':
+                bpy.ops.object.mode_set(mode='SCULPT')
+            elif modo == 'POSE' and obj.type == 'ARMATURE':
+                bpy.ops.object.mode_set(mode='POSE')
+            elif modo == 'EDIT_ARMATURE' and obj.type == 'ARMATURE':
+                bpy.ops.object.mode_set(mode='EDIT_ARMATURE')
+            elif modo == 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
+            else:
+                print("Modo no válido")
 
 
 
