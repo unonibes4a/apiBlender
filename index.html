@@ -256,9 +256,155 @@ button:hover {
 
     <div class="class-item" id="idpinfo">
        <div class="clw">
-
-       <div id="salida"><div>import bpy</div><div></div><div># Variables globales</div><div>global_vars = {</div><div>    "selected_object_1": None,</div><div>    "selected_object_2": None,</div><div>    "slider_int_value": 5,</div><div>    "slider_float_value": 0.5,</div><div>    "checkbox_1": False,</div><div>    "checkbox_2": True,</div><div>    "dropdown_value": "Option1",</div><div>    "input_text": "Default Text"</div><div>}</div><div></div><div># Actualización de variables globales</div><div>def update_slider_int(self, context):</div><div>    global_vars["slider_int_value"] = self.slider_int_value</div><div></div><div>def update_slider_float(self, context):</div><div>    global_vars["slider_float_value"] = self.slider_float_value</div><div></div><div>def update_checkbox_1(self, context):</div><div>    global_vars["checkbox_1"] = self.checkbox_1</div><div></div><div>def update_checkbox_2(self, context):</div><div>    global_vars["checkbox_2"] = self.checkbox_2</div><div></div><div>def update_dropdown(self, context):</div><div>    global_vars["dropdown_value"] = self.dropdown_value</div><div></div><div>def update_input_text(self, context):</div><div>    global_vars["input_text"] = self.input_text</div><div></div><div># Definir propiedades</div><div>bpy.types.Scene.slider_int_value = bpy.props.IntProperty(</div><div>    name="Int Slider",</div><div>    default=5,</div><div>    min=0,</div><div>    max=10,</div><div>    update=update_slider_int</div><div>)</div><div></div><div>bpy.types.Scene.slider_float_value = bpy.props.FloatProperty(</div><div>    name="Float Slider",</div><div>    default=0.5,</div><div>    min=0.0,</div><div>    max=1.0,</div><div>    update=update_slider_float</div><div>)</div><div></div><div>bpy.types.Scene.checkbox_1 = bpy.props.BoolProperty(</div><div>    name="Checkbox 1",</div><div>    default=False,</div><div>    update=update_checkbox_1</div><div>)</div><div></div><div>bpy.types.Scene.checkbox_2 = bpy.props.BoolProperty(</div><div>    name="Checkbox 2",</div><div>    default=True,</div><div>    update=update_checkbox_2</div><div>)</div><div></div><div>bpy.types.Scene.dropdown_value = bpy.props.EnumProperty(</div><div>    name="Dropdown",</div><div>    items=[</div><div>        ("Option1", "Option 1", "First option"),</div><div>        ("Option2", "Option 2", "Second option"),</div><div>        ("Option3", "Option 3", "Third option")</div><div>    ],</div><div>    update=update_dropdown</div><div>)</div><div></div><div>bpy.types.Scene.input_text = bpy.props.StringProperty(</div><div>    name="Input Text",</div><div>    default="Default Text",</div><div>    update=update_input_text</div><div>)</div><div></div><div># Definir la clase del panel</div><div>class AdvancedPanel(bpy.types.Panel):</div><div>    bl_label = "Advanced Panel"</div><div>    bl_idname = "OBJECT_PT_advanced_panel"</div><div>    bl_space_type = 'VIEW_3D'</div><div>    bl_region_type = 'UI'</div><div>    bl_category = 'Tool'</div><div>    bl_context = "objectmode"</div><div>    bl_options = {'DEFAULT_CLOSED'}</div><div></div><div>    def draw(self, context):</div><div>        layout = self.layout</div><div>        scene = context.scene</div><div></div><div>        # DataPickers (Goteros)</div><div>        row = layout.row()</div><div>        row.label(text="DataPicker 1:")</div><div>        row.prop(context.scene, "selected_object_1", text="")</div><div></div><div>        row = layout.row()</div><div>        row.label(text="DataPicker 2:")</div><div>        row.prop(context.scene, "selected_object_2", text="")</div><div></div><div>        # Sliders</div><div>        layout.label(text="Sliders:")</div><div>        layout.prop(scene, "slider_int_value", slider=True)</div><div>        layout.prop(scene, "slider_float_value", slider=True)</div><div></div><div>        # Checkboxes</div><div>        layout.label(text="Checkboxes:")</div><div>        layout.prop(scene, "checkbox_1")</div><div>        layout.prop(scene, "checkbox_2")</div><div></div><div>        # Dropdown (Selector de opciones)</div><div>        layout.label(text="Dropdown:")</div><div>        layout.prop(scene, "dropdown_value", text="")</div><div></div><div>        # Input Text</div><div>        layout.label(text="Input Text:")</div><div>        layout.prop(scene, "input_text", text="")</div><div></div><div># Registrar y desregistrar clases</div><div>def register():</div><div>    bpy.utils.register_class(AdvancedPanel)</div><div>    bpy.types.Scene.selected_object_1 = bpy.props.PointerProperty(type=bpy.types.Object)</div><div>    bpy.types.Scene.selected_object_2 = bpy.props.PointerProperty(type=bpy.types.Object)</div><div></div><div>def unregister():</div><div>    bpy.utils.unregister_class(AdvancedPanel)</div><div>    del bpy.types.Scene.selected_object_1</div><div>    del bpy.types.Scene.selected_object_2</div><div></div><div>if __name__ == "__main__":</div><div>    register()</div></div>
-    
+        <div id="contendidopy"><pre class="codigo-python">import bpy
+ 
+            import time
+            # Variables globales
+            global_vars = {
+            "selected_object_1": None,
+            "selected_object_2": None,
+            "slider_int_value": 5,
+            "slider_float_value": 0.5,
+            "checkbox_1": False,
+            "checkbox_2": True,
+            "dropdown_value": "Option1",
+            "input_text": "Default Text"
+            }
+            # Actualización de variables globales
+            def update_slider_int(self, context):
+                global_vars["slider_int_value"] = self.slider_int_value
+            def update_slider_float(self, context):
+                global_vars["slider_float_value"] = self.slider_float_value
+            def update_checkbox_1(self, context):
+                global_vars["checkbox_1"] = self.checkbox_1
+            def update_checkbox_2(self, context):
+                global_vars["checkbox_2"] = self.checkbox_2
+            def update_dropdown(self, context):
+                global_vars["dropdown_value"] = self.dropdown_value
+            def update_input_text(self, context):
+                global_vars["input_text"] = self.input_text
+            # Definir propiedades
+            bpy.types.Scene.slider_int_value = bpy.props.IntProperty(
+            name="Int Slider",
+            default=5,
+            min=0,
+            max=10,
+            update=update_slider_int
+            )
+            bpy.types.Scene.slider_float_value = bpy.props.FloatProperty(
+            name="Float Slider",
+            default=0.5,
+            min=0.0,
+            max=1.0,
+            update=update_slider_float
+            )
+            bpy.types.Scene.checkbox_1 = bpy.props.BoolProperty(
+            name="Checkbox 1",
+            default=False,
+            update=update_checkbox_1
+            )
+            bpy.types.Scene.checkbox_2 = bpy.props.BoolProperty(
+            name="Checkbox 2",
+            default=True,
+            update=update_checkbox_2
+            )
+            bpy.types.Scene.dropdown_value = bpy.props.EnumProperty(
+            name="Dropdown",
+            items=[
+            ("Option1", "Option 1", "First option"),
+            ("Option2", "Option 2", "Second option"),
+            ("Option3", "Option 3", "Third option")
+            ],
+            update=update_dropdown
+            )
+            bpy.types.Scene.input_text = bpy.props.StringProperty(
+            name="Input Text",
+            default="Default Text",
+            update=update_input_text
+            )
+            # Definir la clase del panel
+            class AdvancedPanel(bpy.types.Panel):
+                bl_label = "Advanced Panel"
+                bl_idname = "OBJECT_PT_advanced_panel"
+                bl_space_type = 'VIEW_3D'
+                bl_region_type = 'UI'
+                bl_category = 'Tool'
+                bl_context = "objectmode"
+                bl_options = {'DEFAULT_CLOSED'}
+                def draw(self, context):
+                    layout = self.layout
+                    scene = context.scene
+                    # DataPickers (Goteros)
+                    row = layout.row()
+                    row.label(text="DataPicker 1:")
+                    row.prop(context.scene, "selected_object_1", text="")
+                    row = layout.row()
+                    row.label(text="DataPicker 2:")
+                    row.prop(context.scene, "selected_object_2", text="")
+                    # Sliders
+                    layout.label(text="Sliders:")
+                    layout.prop(scene, "slider_int_value", slider=True)
+                    layout.prop(scene, "slider_float_value", slider=True)
+                    # Checkboxes
+                    layout.label(text="Checkboxes:")
+                    layout.prop(scene, "checkbox_1")
+                    layout.prop(scene, "checkbox_2")
+                    # Dropdown (Selector de opciones)
+                    layout.label(text="Dropdown:")
+                    layout.prop(scene, "dropdown_value", text="")
+                    # Input Text
+                    layout.label(text="Input Text:")
+                    layout.prop(scene, "input_text", text="")
+                    drawbotons(self, context)
+            # Registrar y desregistrar clases
+            
+            
+            def drawbotons(self, context):
+                    layout = self.layout
+                    row = layout.row()
+                    row.operator("custom.button1")
+                    row.operator("custom.button2")
+            class Button1Operator(bpy.types.Operator):
+                bl_idname = "custom.button1"
+                bl_label = "Botón 1"
+            
+                def execute(self, context):
+                    print("Botón 1 presionado")
+                    self.report({'INFO'}, "Botón 1 presionado")
+                    
+                    return {'FINISHED'}
+            
+            class Button2Operator(bpy.types.Operator):
+                bl_idname = "custom.button2"
+                bl_label = "Botón 2"
+            
+                def execute(self, context):
+                    print("Botón 2 presionado")
+                    self.report({'INFO'}, "Botón 2 presionado")
+                    return {'FINISHED'}
+            #
+            classes = [
+                AdvancedPanel,
+                Button1Operator,
+                Button2Operator
+            ]
+            
+             
+                 
+            def register():  
+                for cls in classes:
+                    bpy.utils.register_class(cls)
+                bpy.types.Scene.selected_object_1 = bpy.props.PointerProperty(type=bpy.types.Object)
+                bpy.types.Scene.selected_object_2 = bpy.props.PointerProperty(type=bpy.types.Object)
+            def unregister():
+                for cls in reversed(classes):
+                    bpy.utils.unregister_class(cls)
+                del bpy.types.Scene.selected_object_1
+                del bpy.types.Scene.selected_object_2
+                
+                
+            if __name__ == "__main__":
+                register()</pre></div>
     
     
     </div> 
