@@ -8,6 +8,144 @@ from math import radians
 class example:
     
     @staticmethod
+    def panel():
+        """
+        import bpy
+
+        # Variables globales
+        global_vars = {
+            "selected_object_1": None,
+            "selected_object_2": None,
+            "slider_int_value": 5,
+            "slider_float_value": 0.5,
+            "checkbox_1": False,
+            "checkbox_2": True,
+            "dropdown_value": "Option1",
+            "input_text": "Default Text"
+        }
+
+        # Actualización de variables globales
+        def update_slider_int(self, context):
+            global_vars["slider_int_value"] = self.slider_int_value
+
+        def update_slider_float(self, context):
+            global_vars["slider_float_value"] = self.slider_float_value
+
+        def update_checkbox_1(self, context):
+            global_vars["checkbox_1"] = self.checkbox_1
+
+        def update_checkbox_2(self, context):
+            global_vars["checkbox_2"] = self.checkbox_2
+
+        def update_dropdown(self, context):
+            global_vars["dropdown_value"] = self.dropdown_value
+
+        def update_input_text(self, context):
+            global_vars["input_text"] = self.input_text
+
+        # Definir propiedades
+        bpy.types.Scene.slider_int_value = bpy.props.IntProperty(
+            name="Int Slider",
+            default=5,
+            min=0,
+            max=10,
+            update=update_slider_int
+        )
+
+        bpy.types.Scene.slider_float_value = bpy.props.FloatProperty(
+            name="Float Slider",
+            default=0.5,
+            min=0.0,
+            max=1.0,
+            update=update_slider_float
+        )
+
+        bpy.types.Scene.checkbox_1 = bpy.props.BoolProperty(
+            name="Checkbox 1",
+            default=False,
+            update=update_checkbox_1
+        )
+
+        bpy.types.Scene.checkbox_2 = bpy.props.BoolProperty(
+            name="Checkbox 2",
+            default=True,
+            update=update_checkbox_2
+        )
+
+        bpy.types.Scene.dropdown_value = bpy.props.EnumProperty(
+            name="Dropdown",
+            items=[
+                ("Option1", "Option 1", "First option"),
+                ("Option2", "Option 2", "Second option"),
+                ("Option3", "Option 3", "Third option")
+            ],
+            update=update_dropdown
+        )
+
+        bpy.types.Scene.input_text = bpy.props.StringProperty(
+            name="Input Text",
+            default="Default Text",
+            update=update_input_text
+        )
+
+        # Definir la clase del panel
+        class AdvancedPanel(bpy.types.Panel):
+            bl_label = "Advanced Panel"
+            bl_idname = "OBJECT_PT_advanced_panel"
+            bl_space_type = 'VIEW_3D'
+            bl_region_type = 'UI'
+            bl_category = 'Tool'
+            bl_context = "objectmode"
+            bl_options = {'DEFAULT_CLOSED'}
+
+            def draw(self, context):
+                layout = self.layout
+                scene = context.scene
+
+                # DataPickers (Goteros)
+                row = layout.row()
+                row.label(text="DataPicker 1:")
+                row.prop(context.scene, "selected_object_1", text="")
+
+                row = layout.row()
+                row.label(text="DataPicker 2:")
+                row.prop(context.scene, "selected_object_2", text="")
+
+                # Sliders
+                layout.label(text="Sliders:")
+                layout.prop(scene, "slider_int_value", slider=True)
+                layout.prop(scene, "slider_float_value", slider=True)
+
+                # Checkboxes
+                layout.label(text="Checkboxes:")
+                layout.prop(scene, "checkbox_1")
+                layout.prop(scene, "checkbox_2")
+
+                # Dropdown (Selector de opciones)
+                layout.label(text="Dropdown:")
+                layout.prop(scene, "dropdown_value", text="")
+
+                # Input Text
+                layout.label(text="Input Text:")
+                layout.prop(scene, "input_text", text="")
+
+        # Registrar y desregistrar clases
+        def register():
+            bpy.utils.register_class(AdvancedPanel)
+            bpy.types.Scene.selected_object_1 = bpy.props.PointerProperty(type=bpy.types.Object)
+            bpy.types.Scene.selected_object_2 = bpy.props.PointerProperty(type=bpy.types.Object)
+
+        def unregister():
+            bpy.utils.unregister_class(AdvancedPanel)
+            del bpy.types.Scene.selected_object_1
+            del bpy.types.Scene.selected_object_2
+
+        if __name__ == "__main__":
+            register()
+        
+        """
+        
+        pass
     def imports():
         """
             import bpy
