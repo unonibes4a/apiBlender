@@ -5,7 +5,22 @@ import numpy as np
 from math import radians
 
 
+class example:
+    
+    @staticmethod
+    def imports():
+        """
+            import bpy
+            import bmesh
+            from mathutils import Vector
 
+            import bpy
+            import bmesh
+            from mathutils import Vector
+
+        """
+        
+        pass
 
 
 class SelectObj:
