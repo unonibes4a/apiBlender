@@ -127,7 +127,7 @@ class CreatorElementwidget ():
         
         """ 
         
-def onchangeselecionaObjeto1(self, context):
+     onchangeselecionaObjeto1(self, context):
     global objt1selectPos   
     objt1selectPos = context.scene.selected_object_1 
     print(f"{objt1selectPos.name}")
@@ -140,6 +140,24 @@ def onchangeselecionaObjeto1(self, context):
         name=nameStringId,
         description=description)
         pass
+    
+    @staticmethod
+    def create_checkbox_element(name,value,update_checkbox_1):
+        
+        """
+        update_checkbox_1f(self, context):
+    global boolAplicarSHRINKWRAP
+    
+    boolAplicarSHRINKWRAP=context.scene.checkbox_1 
+    
+    pass
+        bpy.types.Scene.checkbox_1
+        """
+        return    bpy.props.BoolProperty(
+                name=name,
+                default=value,
+                update=update_checkbox_1
+                )
     
     pass
 class Bone:
