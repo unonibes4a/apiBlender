@@ -57,7 +57,7 @@ class SelectObj:
     def make_object_active(obj):      
         bpy.ops.object.select_all(action='DESELECT') 
         bpy.context.view_layer.objects.active = obj    
-        object_to_modify.select_set(True)
+        obj.select_set(True)
           
     
     
