@@ -26,7 +26,27 @@ class example:
 
 
 class SelectObj:
-    
+    @staticmethod
+    def get_selecto_bj1_obj2():
+       
+    # Obtener el objeto activo y los objetos seleccionados
+        obj2 = bpy.context.active_object
+        selected_objects = bpy.context.selected_objects
+
+        # Verificar si hay un objeto activo y objetos seleccionados
+        if not obj2 or not selected_objects:
+            return None, None
+
+        # Buscar el primer objeto seleccionado que no sea el activo
+        obj1 = None
+        for objn in selected_objects:
+            if objn.name != obj2.name:
+                obj1 = objn
+                break  # Salir del bucle una vez que se encuentra obj1
+
+        return obj1, obj2
+        
+     
     
     @staticmethod
     def vertex_normal_and_faces_of_the_selected_edge():
@@ -55,6 +75,12 @@ class SelectObj:
     
     @staticmethod
     def make_object_active(obj):      
+        if obj is None:
+            print("Error:   None.")
+            return
+        if obj.type != 'MESH':
+            print(f"Error: no mesh")
+            return      
         bpy.ops.object.select_all(action='DESELECT') 
         bpy.context.view_layer.objects.active = obj    
         obj.select_set(True)
