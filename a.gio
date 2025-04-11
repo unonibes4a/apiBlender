@@ -1,888 +1,1195 @@
 import bpy
-
-import mathutils
 import bmesh
+import mathutils
+import numpy as np
+from math import radians
+
+
+class example:
+    
+   
+        
+         
+    def imports():
+        """
+            import bpy
+            import bmesh
+            from mathutils import Vector
+
+            import bpy
+            import bmesh
+            from mathutils import Vector
+
+        """
+        
+        pass
+
+
+class SelectObj:
+    
+    
+    
+    @staticmethod
+    def get_unselected__mesh_elements_verts_face_edges():
+        """
+        Devuelve un diccionario con los elementos NO seleccionados (caras, aristas y vértices) del objeto activo.
+        Ejemplo de retorno:
+        {
+            'faces': [lista de caras NO seleccionadas],
+            'edges': [lista de aristas NO seleccionadas],
+            'verts': [lista de vértices NO seleccionados]
+        }
+        Si no hay objeto activo o no es una malla, devuelve None.
+        """
+        obj = bpy.context.active_object
+        
+        if not obj or obj.type != 'MESH':
+            return None
+        
+        # Asegurarse de estar en modo edición
+        if obj.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Obtener datos BMesh
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
+        bm.verts.ensure_lookup_table()
+        
+        # Filtrar solo los elementos NO seleccionados
+        unselected_faces = [face for face in bm.faces if not face.select]
+        unselected_edges = [edge for edge in bm.edges if not edge.select]
+        unselected_verts = [vert for vert in bm.verts if not vert.select]
+        
+        return {
+            'faces': unselected_faces,
+            'edges': unselected_edges,
+            'verts': unselected_verts
+        }
+    
+    
+    @staticmethod
+    def get_selected_mesh_elements_verts_face_edges():
+        """
+        import bpy
+        import bmesh
+        Devuelve un diccionario con los elementos seleccionados (caras, aristas y vértices) del objeto activo.
+        Ejemplo de retorno:
+        {
+            'faces': [lista de caras seleccionadas],
+            'edges': [lista de aristas seleccionadas],
+            'verts': [lista de vértices seleccionados]
+        }
+        Si no hay objeto activo o no es una malla, devuelve None.
+        """
+        obj = bpy.context.active_object
+
+        if not obj or obj.type != 'MESH':
+            return None
+
+        
+        if obj.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+     
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
+        bm.verts.ensure_lookup_table()
+
+       
+        selected_faces = [face for face in bm.faces if face.select]
+        selected_edges = [edge for edge in bm.edges if edge.select]
+        selected_verts = [vert for vert in bm.verts if vert.select]
+
+        return {
+            'faces': selected_faces,
+            'edges': selected_edges,
+            'verts': selected_verts
+        }
+    
+    
+    
+    
+    
+    
+     
+    @staticmethod
+    def get_mesh_elementsFaces_verts_edges():
+        """Devuelve todos los elementos de malla (caras, aristas y vértices)"""
+        obj = bpy.context.active_object
+        if obj and obj.type == 'MESH':
+            bpy.ops.object.mode_set(mode='EDIT')
+            bm = bmesh.from_edit_mesh(obj.data)
+            return {
+                'faces': bm.faces,
+                'edges': bm.edges,
+                'verts': bm.verts
+            }
+        return None
+    @staticmethod
+    def select_faces():
+        obj = bpy.context.active_object     
+        bm = bmesh.from_edit_mesh(obj.data)
+        if obj and obj.type == 'MESH':
+            bpy.ops.object.mode_set(mode='EDIT')
+            bm = bmesh.from_edit_mesh(obj.data)
+            #bm.transform(obj.matrix_world)
+            return bm.faces
+            pass               
+        
+ 
+    @staticmethod
+    def get_selecto_bj1_obj2():
+       
+    # Obtener el objeto activo y los objetos seleccionados
+        obj2 = bpy.context.active_object
+        selected_objects = bpy.context.selected_objects
+
+        # Verificar si hay un objeto activo y objetos seleccionados
+        if not obj2 or not selected_objects:
+            return None, None
+
+        # Buscar el primer objeto seleccionado que no sea el activo
+        obj1 = None
+        for objn in selected_objects:
+            if objn.name != obj2.name:
+                obj1 = objn
+                break  # Salir del bucle una vez que se encuentra obj1
+
+        return obj1, obj2
+        
+     
+    
+    @staticmethod
+    def vertex_normal_and_faces_of_the_selected_edge():
+        obj = bpy.context.active_object        
+        if obj and obj.type == 'MESH':      
+            bpy.ops.object.mode_set(mode='EDIT')    
+        bm = bmesh.from_edit_mesh(obj.data)     
+        selected_faces = [f for f in bm.faces if f.select]
+        selected_verts = [v for v in bm.verts if v.select]
+        if len(selected_faces) == 1:  
+            face = selected_faces[0]
+            location = obj.matrix_world @ face.calc_center_median()
+            normal = obj.matrix_world.to_3x3() @ face.normal
+        elif len(selected_verts) == 1: 
+            vert = selected_verts[0]
+            location = obj.matrix_world @ vert.co
+            normal = obj.matrix_world.to_3x3() @ vert.normal           
+            pass
+        return normal
+     
+    @staticmethod
+    def object_select():
+        return bpy.context.active_object    
+        pass
+     
+    
+    @staticmethod
+    def make_object_active(obj):      
+        if obj is None:
+            print("Error:   None.")
+            return
+        if obj.type != 'MESH':
+            print(f"Error: no mesh")
+            return      
+        bpy.ops.object.select_all(action='DESELECT') 
+        bpy.context.view_layer.objects.active = obj    
+        obj.select_set(True)
+          
+    
+    
+    
+    @staticmethod
+    def aligned_obj(obj, normal, location):         
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj        
+        obj.location = location
+        obj.rotation_euler = normal.to_track_quat('Z', 'Y').to_euler()
+    
+    @staticmethod
+    def get_selected_objects():   
+        selected_objects = bpy.context.selected_objects
+        return selected_objects
+    @staticmethod
+    def get_selected_bones_names():     
+        if bpy.context.mode == 'POSE':            
+            armature_obj = bpy.context.active_object          
+            if armature_obj and armature_obj.type == 'ARMATURE': 
+                selected_bones = [bone.name for bone in armature_obj.data.bones if bone.select]
+                return selected_bones
+            else:
+                return "El objeto activo no es una Armadura."
+        else:
+            return "No estás en Pose Mode."
+    @staticmethod
+    def get_selected_bones():
+        if bpy.context.mode == 'POSE':
+         
+            armature_obj = bpy.context.active_object
+            
+          
+            if armature_obj and armature_obj.type == 'ARMATURE':
+            
+                selected_bones = [bone for bone in armature_obj.pose.bones if bone.bone.select]
+                return selected_bones
+            else:
+                return "El objeto activo no es una Armadura."
+        else:
+            return "No estás en Pose Mode."
+  
+ 
+    @staticmethod
+    def change_mode(modo):
+        obj = bpy.context.active_object
+        if obj:
+            if modo == 'EDIT':
+                bpy.ops.object.mode_set(mode='EDIT')
+            elif modo == 'SCULPT':
+                bpy.ops.object.mode_set(mode='SCULPT')
+            elif modo == 'POSE' and obj.type == 'ARMATURE':
+                bpy.ops.object.mode_set(mode='POSE')
+            elif modo == 'EDIT_ARMATURE' and obj.type == 'ARMATURE':
+                bpy.ops.object.mode_set(mode='EDIT_ARMATURE')
+            elif modo == 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
+            else:
+                print("Modo no válido")
+
+
+class CreatorElementwidget ():
+    
+    @staticmethod
+    def datepicker_object(nameStringId="",onchenge=None,description="select"):
+        
+        """ 
+        
+     onchangeselecionaObjeto1(self, context):
+    global objt1selectPos   
+    objt1selectPos = context.scene.selected_object_1 
+    print(f"{objt1selectPos.name}")
+        bpy.types.Scene.selected_object_1 =crearInputSelectorGoteroObject("selecionaobj1",onchangeselecionaObjeto1)
+        """
+
+        return bpy.props.PointerProperty(
+        type=bpy.types.Object,
+        update=onchenge,
+        name=nameStringId,
+        description=description)
+        pass
+    
+    @staticmethod
+    def create_checkbox_element(name,value,update_checkbox_1):
+        
+        """
+        update_checkbox_1f(self, context):
+    global boolAplicarSHRINKWRAP
+    
+    boolAplicarSHRINKWRAP=context.scene.checkbox_1 
+    
+    pass
+        bpy.types.Scene.checkbox_1
+        """
+        return    bpy.props.BoolProperty(
+                name=name,
+                default=value,
+                update=update_checkbox_1
+                )
+    
+    pass
+class Bone:
+    
+    @staticmethod   
+    def set_bone_rotation_ejes_string_ARRAYS(bones, rotation_degrees, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        Aplica una rotación a una lista de huesos en el eje especificado.
+
+        Parámetros:
+        bones (list): Lista de huesos (pose bones) a los que se aplicará la rotación.
+        rotation_degrees (int, float o tuple): Grados de rotación. Si es un solo número, se aplica a todos los ejes.
+        Si es una tupla de 3 valores, se aplica a los ejes X, Y, Z respectivamente.
+        axis (str): Eje de rotación ('X', 'Y', 'Z'). Por defecto es 'X'.
+        orientation (str): Orientación de la transformación ('LOCAL', 'GLOBAL', etc.). Por defecto es 'LOCAL'.
+        pivot_point (str): Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        Por defecto es 'INDIVIDUAL_ORIGINS'.
+
+        Uso:
+        from math import radians
+        import bpy
+
+        # Obtener los huesos seleccionados
+        selected_bones = bpy.context.selected_pose_bones
+
+        if selected_bones:
+        set_bone_rotation_ejes_string__ARRAYS(selected_bones, 20, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS')
+        else:
+        print("No hay huesos seleccionados.")
+
+        Librerías necesarias:
+        - bpy: Módulo de Blender para manipular objetos y huesos.
+        - math.radians: Para convertir grados a radianes.
+        
+        
+        
+        
+        
+        import bpy
+        from math import radians selected_bones = get_selected_bones()
+            if selected_bones:
+        set_bone_rotation_ejes_string(selected_bones, 20, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS' #MEDIAN_POINT)
+        else:
+            print("No hay huesos seleccionados.")
+
+        """
+        bpy.context.active_pose_bone.rotation_mode = 'XYZ'
+
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+         
+        if isinstance(rotation_degrees, (int, float)):
+            rotation_degrees = (rotation_degrees, rotation_degrees, rotation_degrees)
+
+        for bone in bones:
+            bpy.context.view_layer.objects.active = bpy.context.active_object
+            bpy.ops.object.posemode_toggle()
+            bpy.ops.object.posemode_toggle()
+
+            if axis == "X":
+                bone.rotation_euler.x = radians(rotation_degrees[0])
+            if axis == "Y":
+                bone.rotation_euler.y = radians(rotation_degrees[1])
+            if axis == "Z":
+                bone.rotation_euler.z = radians(rotation_degrees[2])
+
+            bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
+        
+    
+
+    @staticmethod 
+    def rotate_bones_advanced_ARRAYS(bones, rotation_degrees, orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        import bpy
+        from math import radians
+        
+
+        Aplica una rotación avanzada a una lista de huesos en los tres ejes (X, Y, Z).
+
+        Parámetros:
+        bones (list): Lista de huesos (pose bones) a los que se aplicará la rotación.
+        rotation_degrees (tuple): Grados de rotación para los ejes X, Y, Z (debe ser una tupla de 3 valores).
+        orientation (str): Orientación de la transformación ('LOCAL', 'GLOBAL', etc.). Por defecto es 'LOCAL'.
+        pivot_point (str): Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        Por defecto es 'INDIVIDUAL_ORIGINS'.
+
+        Uso:
+        from math import radians
+        import bpy
+
+        # Obtener los huesos seleccionados
+        selected_bones = bpy.context.selected_pose_bones
+
+        if selected_bones:
+        rotate_bones_advanced_ARRAYS(selected_bones, (10, 20, 30), orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS')
+        else:
+        print("No hay huesos seleccionados.")
+
+        Librerías necesarias:
+        - bpy: Módulo de Blender para manipular objetos y huesos.
+        - math.radians: Para convertir grados a radianes.
+            selected_bones = get_selected_bones()
+            if selected_bones:
+                set_bone_rotation_ejes_string(selected_bones, 20, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS') #MEDIAN_POINT
+            else:
+                print("No hay huesos seleccionados.")
+            
+            
+        """
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+        for bone in bones:
+            bpy.context.view_layer.objects.active = bpy.context.active_object
+            bpy.ops.object.posemode_toggle()
+            bpy.ops.object.posemode_toggle()
+
+            bpy.ops.transform.rotate(
+                value=radians(rotation_degrees[0]), 
+                orient_axis='X', 
+                orient_type=orientation,
+                constraint_axis=(True, False, False)
+            )
+            bpy.ops.transform.rotate(
+                value=radians(rotation_degrees[1]), 
+                orient_axis='Y', 
+                orient_type=orientation,
+                constraint_axis=(False, True, False)
+            )
+            bpy.ops.transform.rotate(
+                value=radians(rotation_degrees[2]), 
+                orient_axis='Z', 
+                orient_type=orientation,
+                constraint_axis=(False, False, True)
+            )
+            bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
+        
+        
+        
+    
+    
+    @staticmethod
+    def set_bone_rotation_ejes_string_SINGLE(bone, rotation_degrees, axis='X', orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        import bpy
+        from math import radians
+        Aplica una rotación a un solo hueso en el eje especificado.
+
+        :param bone: El hueso al que se le aplicará la rotación.
+        :param rotation_degrees: Grados de rotación (puede ser un solo valor o una tupla de 3 valores).
+        :param axis: Eje de rotación ('X', 'Y', 'Z').
+        :param orientation: Orientación de la transformación ('LOCAL', 'GLOBAL', etc.).
+        :param pivot_point: Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        """
+         
+
+        bpy.context.active_pose_bone.rotation_mode = 'XYZ'
+
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+        if isinstance(rotation_degrees, (int, float)):
+            rotation_degrees = (rotation_degrees, rotation_degrees, rotation_degrees)
+
+        bpy.context.view_layer.objects.active = bpy.context.active_object
+        bpy.ops.object.posemode_toggle()
+        bpy.ops.object.posemode_toggle()
+
+        if axis == "X":
+            bone.rotation_euler.x = radians(rotation_degrees[0])
+        if axis == "Y":
+            bone.rotation_euler.y = radians(rotation_degrees[1])
+        if axis == "Z":
+            bone.rotation_euler.z = radians(rotation_degrees[2])
+
+        bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
+
+
+    @staticmethod
+    def rotate_bone_advanced_SINGLE(bone, rotation_degrees, orientation='LOCAL', pivot_point='INDIVIDUAL_ORIGINS'):
+        """
+        import bpy
+        from math import radians
+        Aplica una rotación avanzada a un solo hueso en los tres ejes.
+
+        :param bone: El hueso al que se le aplicará la rotación.
+        :param rotation_degrees: Grados de rotación (debe ser una tupla de 3 valores para X, Y, Z).
+        :param orientation: Orientación de la transformación ('LOCAL', 'GLOBAL', etc.).
+        :param pivot_point: Punto de pivote para la transformación ('INDIVIDUAL_ORIGINS', 'MEDIAN_POINT', etc.).
+        """
+         
+
+        bpy.context.scene.transform_orientation_slots[0].type = orientation
+        bpy.context.scene.tool_settings.transform_pivot_point = pivot_point
+
+        bpy.context.view_layer.objects.active = bpy.context.active_object
+        bpy.ops.object.posemode_toggle()
+        bpy.ops.object.posemode_toggle()
+
+        bpy.ops.transform.rotate(
+            value=radians(rotation_degrees[0]), 
+            orient_axis='X', 
+            orient_type=orientation,
+            constraint_axis=(True, False, False)
+        )
+        bpy.ops.transform.rotate(
+            value=radians(rotation_degrees[1]), 
+            orient_axis='Y', 
+            orient_type=orientation,
+            constraint_axis=(False, True, False)
+        )
+        bpy.ops.transform.rotate(
+            value=radians(rotation_degrees[2]), 
+            orient_axis='Z', 
+            orient_type=orientation,
+            constraint_axis=(False, False, True)
+        )
+
+        bone.keyframe_insert(data_path="rotation_euler", frame=bpy.context.scene.frame_current)
+
+        bpy.context.view_layer.update()
 
 
 
+
+
+
+
+
+
+
+class GioNode3d:
+    """
+    Clase estática para convertir funcionalidades de Godot a Blender.
+    Implementa las propiedades y métodos del Node3D de Godot.
+    Trabaja directamente con objetos de Blender.
+    """
+    
+    @staticmethod
+    def get_basis():
+        """Obtiene la base local"""
+        import mathutils
+        return mathutils.Matrix.Identity(3)
+    
+    @staticmethod
+    def get_global_basis():
+        """Obtiene la base global"""
+        import mathutils
+        return mathutils.Matrix.Identity(3)
+    
+    @staticmethod
+    def get_global_position(obj):
+        """Obtiene la posición global del objeto"""
+        return obj.matrix_world.translation
+    
+    @staticmethod
+    def get_global_rotation(obj):
+        """Obtiene la rotación global en radianes"""
+        return obj.matrix_world.to_euler()
+    
+    @staticmethod
+    def get_global_rotation_degrees(obj):
+        """Obtiene la rotación global en grados"""
+        import math
+        rot_rad = obj.matrix_world.to_euler()
+        return [math.degrees(r) for r in rot_rad]
+    
+    @staticmethod
+    def get_global_transform(obj):
+        """Obtiene la transformación global"""
+        return obj.matrix_world
+    
+    @staticmethod
+    def get_position(obj):
+        """Obtiene la posición local del objeto"""
+        return obj.location
+    
+    @staticmethod
+    def set_position(obj, position):
+        """Establece la posición local del objeto"""
+        obj.location = position
+    
+    @staticmethod
+    def get_quaternion(obj):
+        """Obtiene la rotación en formato quaternion"""
+        return obj.rotation_quaternion
+    
+    @staticmethod
+    def get_rotation(obj):
+        """Obtiene la rotación en radianes"""
+        return obj.rotation_euler
+    
+    @staticmethod
+    def set_rotation(obj, rotation):
+        """Establece la rotación en radianes"""
+        obj.rotation_euler = rotation
+    
+    @staticmethod
+    def get_rotation_degrees(obj):
+        """Obtiene la rotación en grados"""
+        import math
+        rot_rad = obj.rotation_euler
+        return [math.degrees(r) for r in rot_rad]
+    
+    @staticmethod
+    def set_rotation_degrees(obj, rotation_degrees):
+        """Establece la rotación en grados"""
+        import math
+        rot_rad = [math.radians(r) for r in rotation_degrees]
+        obj.rotation_euler = rot_rad
+    
+    @staticmethod
+    def get_scale(obj):
+        """Obtiene la escala del objeto"""
+        return obj.scale
+    
+    @staticmethod
+    def set_scale(obj, scale):
+        """Establece la escala del objeto"""
+        obj.scale = scale
+    
+    @staticmethod
+    def get_transform(obj):
+        """Obtiene la transformación local"""
+        return obj.matrix_local
+    
+    @staticmethod
+    def set_transform(obj, transform):
+        """Establece la transformación local"""
+        obj.matrix_local = transform
+    
+    @staticmethod
+    def set_visible(obj, visible):
+        """Establece la visibilidad del objeto"""
+        obj.hide_viewport = not visible
+        obj.hide_render = not visible
+    
+    @staticmethod
+    def is_visible(obj):
+        """Comprueba si el objeto es visible"""
+        return not obj.hide_viewport
+    
+    @staticmethod
+    def add_gizmo(obj):
+        """Simula añadir un gizmo en Blender"""
+        # En Blender esto se manejaría de forma diferente
+        print(f"Gizmo añadido al objeto {obj.name}")
+    
+    @staticmethod
+    def clear_gizmos(obj):
+        """Simula limpiar gizmos en Blender"""
+        # En Blender esto se manejaría de forma diferente
+        print(f"Gizmos limpiados del objeto {obj.name}")
+    
+    @staticmethod
+    def get_parent(obj):
+        """Obtiene el padre del objeto"""
+        return obj.parent
+    
+    @staticmethod
+    def global_rotate(obj, axis, angle):
+        """Rota el objeto globalmente"""
+        import mathutils
+        rot_mat = mathutils.Matrix.Rotation(angle, 4, axis)
+        obj.matrix_world = rot_mat @ obj.matrix_world
+    
+    @staticmethod
+    def global_scale(obj, scale):
+        """Escala el objeto globalmente"""
+        import mathutils
+        scale_mat = mathutils.Matrix.Scale(scale[0], 4, (1, 0, 0))
+        scale_mat @= mathutils.Matrix.Scale(scale[1], 4, (0, 1, 0))
+        scale_mat @= mathutils.Matrix.Scale(scale[2], 4, (0, 0, 1))
+        obj.matrix_world = scale_mat @ obj.matrix_world
+    
+    @staticmethod
+    def global_translate(obj, offset):
+        """Traslada el objeto globalmente"""
+        import mathutils
+        trans_mat = mathutils.Matrix.Translation(offset)
+        obj.matrix_world = trans_mat @ obj.matrix_world
+    
+    @staticmethod
+    def hide(obj):
+        """Oculta el objeto"""
+        GioNode3d.set_visible(obj, False)
+    
+    @staticmethod
+    def show(obj):
+        """Muestra el objeto"""
+        GioNode3d.set_visible(obj, True)
+    
+    @staticmethod
+    def look_at(obj, target, up=None):
+        """Orienta el objeto para mirar a un punto"""
+        import mathutils
+        if up is None:
+            up = mathutils.Vector((0, 1, 0))
+        
+        loc = obj.location
+        direction = mathutils.Vector(target) - loc
+        rot_quat = direction.to_track_quat('-Z', 'Y')
+        obj.rotation_euler = rot_quat.to_euler()
+    
+    @staticmethod
+    def look_at_from_position(obj, position, target, up=None):
+        """Coloca el objeto en una posición y lo orienta para mirar a un punto"""
+        obj.location = position
+        GioNode3d.look_at(obj, target, up)
+    
+    @staticmethod
+    def rotate(obj, axis, angle):
+        """Rota el objeto en su espacio local"""
+        import mathutils
+        rot_mat = mathutils.Matrix.Rotation(angle, 4, axis)
+        obj.rotation_euler.rotate(rot_mat)
+    
+    @staticmethod
+    def rotate_object_local(obj, axis, angle):
+        """Rota el objeto alrededor de un eje local"""
+        import mathutils
+        # Convertir el eje local a global
+        mat_rot = obj.rotation_euler.to_matrix()
+        global_axis = mat_rot @ mathutils.Vector(axis)
+        # Aplicar la rotación
+        GioNode3d.rotate(obj, global_axis, angle)
+    
+    @staticmethod
+    def rotate_x(obj, angle):
+        """Rota el objeto alrededor del eje X local"""
+        GioNode3d.rotate(obj, (1, 0, 0), angle)
+    
+    @staticmethod
+    def rotate_y(obj, angle):
+        """Rota el objeto alrededor del eje Y local"""
+        GioNode3d.rotate(obj, (0, 1, 0), angle)
+    
+    @staticmethod
+    def rotate_z(obj, angle):
+        """Rota el objeto alrededor del eje Z local"""
+        GioNode3d.rotate(obj, (0, 0, 1), angle)
+    
+    @staticmethod
+    def scale_object_local(obj, scale):
+        """Escala el objeto en sus coordenadas locales"""
+        # En Blender, scale ya está en coordenadas locales
+        obj.scale = scale
+    
+    @staticmethod
+    def translate(obj, offset):
+        """Traslada el objeto en coordenadas globales"""
+        obj.location += offset
+    
+    @staticmethod
+    def translate_object_local(obj, offset):
+        """Traslada el objeto en coordenadas locales"""
+        import mathutils
+        mat_rot = obj.rotation_euler.to_matrix()
+        local_offset = mat_rot @ mathutils.Vector(offset)
+        obj.location += local_offset
+    
+    @staticmethod
+    def set_identity(obj):
+        """Restablece la transformación del objeto a la identidad"""
+        obj.location = (0, 0, 0)
+        obj.rotation_euler = (0, 0, 0)
+        obj.scale = (1, 1, 1)
+    
+    @staticmethod
+    def set_disable_scale(obj, disable):
+        """Establece si la escala está deshabilitada"""
+        # No tiene equivalente directo en Blender, pero podríamos guardar este estado
+        obj["disable_scale"] = disable
+    
+    @staticmethod
+    def is_scale_disabled(obj):
+        """Comprueba si la escala está deshabilitada"""
+        return obj.get("disable_scale", False)
+    
+    @staticmethod
+    def set_notify_transform(obj, enable):
+        """Establece si se notifican las transformaciones"""
+        # No tiene equivalente directo en Blender, pero podríamos guardar este estado
+        obj["notify_transform"] = enable
+    
+    @staticmethod
+    def set_notify_local_transform(obj, enable):
+        """Establece si se notifican las transformaciones locales"""
+        # No tiene equivalente directo en Blender, pero podríamos guardar este estado
+        obj["notify_local_transform"] = enable
+    
+    @staticmethod
+    def is_transform_notification_enabled(obj):
+        """Comprueba si las notificaciones de transformación están habilitadas"""
+        return obj.get("notify_transform", False)
+    
+    @staticmethod
+    def is_local_transform_notification_enabled(obj):
+        """Comprueba si las notificaciones de transformación local están habilitadas"""
+        return obj.get("notify_local_transform", False)
+    
+    @staticmethod
+    def set_ignore_transform_notification(obj, enabled):
+        """Establece si se ignoran las notificaciones de transformación"""
+        # No tiene equivalente directo en Blender, pero podríamos guardar este estado
+        obj["ignore_transform_notification"] = enabled
+    
+    @staticmethod
+    def orthonormalize(obj):
+        """Ortonormaliza la matriz de transformación"""
+        # Esta operación es más compleja en Blender
+        # Aquí hay una implementación simplificada
+        import mathutils
+        mat = obj.matrix_world.to_3x3()
+        mat.normalize()
+        obj.matrix_world = mathutils.Matrix.Translation(obj.matrix_world.translation) @ mat.to_4x4()
+    
+    @staticmethod
+    def to_global(obj, local_point):
+        """Convierte un punto de coordenadas locales a globales"""
+        return obj.matrix_world @ local_point
+    
+    @staticmethod
+    def to_local(obj, global_point):
+        """Convierte un punto de coordenadas globales a locales"""
+        return obj.matrix_world.inverted() @ global_point
+    
+    @staticmethod
+    def update_gizmos():
+        """Actualiza todos los gizmos"""
+        # En Blender se manejaría de forma diferente
+        print("Gizmos actualizados")
+    
+    @staticmethod
+    def is_visible_in_tree(obj):
+        """Comprueba si el objeto es visible en el árbol de escena"""
+        # Comprueba si el objeto o alguno de sus padres está oculto
+        current = obj
+        while current:
+            if current.hide_viewport:
+                return False
+            current = current.parent
+        return True
 
 ##utilidad funcionesclases
 
-   
-
-class GioObjetos:
-    @staticmethod 
-    def duplicar_objeto_completamente(objeto_original):
-        """
-        Duplica un objeto en Blender, creando copias independientes de su malla, materiales y animaciones.
-
-        :param objeto_original: El objeto a duplicar.
-        :return: El nuevo objeto duplicado.
-        """
-        # Crear una copia del objeto
-        objeto_duplicado = objeto_original.copy()
+class GioFunciones:
         
-        # Crear una copia independiente de los datos de la malla
-        if objeto_duplicado.data:
-            objeto_duplicado.data = objeto_duplicado.data.copy()
-        
-        # Crear copias independientes de los materiales
-        if objeto_duplicado.data.materials:
-            objeto_duplicado.data.materials = [mat.copy() for mat in objeto_duplicado.data.materials]
-        
-        # Crear una copia independiente de la acción (animación)
-        if objeto_duplicado.animation_data and objeto_duplicado.animation_data.action:
-            objeto_duplicado.animation_data.action = objeto_duplicado.animation_data.action.copy()
-        
-        # Limpiar cualquier dato de animación no deseado
-        objeto_duplicado.animation_data_clear()
-        
-        # Enlazar el nuevo objeto a la colección actual
-        bpy.context.collection.objects.link(objeto_duplicado)
-        return objeto_duplicado
-    
-    
-    @staticmethod 
-    def escalar_objeto(objeto, factor_escala, espacio_local=True):
-        """
-        
-        import bpy
-import mathutils
-        Escala un objeto según un factor dado.
-
-        :param objeto: El objeto a escalar.
-        :param factor_escala: Vector que define el factor de escala en cada eje.
-        :param espacio_local: Booleano que indica si la escala es en espacio local (True) o global (False).
-        """
-        if espacio_local:
-            objeto.scale = factor_escala
-        else:
-            # Crear la matriz de escala
-            matriz_escala = mathutils.Matrix.Diagonal(factor_escala).to_4x4()
-            # Aplicar la escala en el espacio global
-            objeto.matrix_world = matriz_escala @ objeto.matrix_world
-
- 
-    @staticmethod  
-    def rotar_objeto(objeto, angulo, eje=mathutils.Vector((0, 0, 1)), espacio_local=True):
-        """
-        
-            import bpy
-import mathutils
-from math import radians
-        Rota un objeto alrededor de un eje específico.
-
-        :param objeto: El objeto a rotar.
-        :param angulo: Ángulo de rotación en grados.
-        :param eje: Vector que define el eje de rotación.
-        :param espacio_local: Booleano que indica si la rotación es en espacio local (True) o global (False).
-        """
-        # Convertir el ángulo a radianes
-        angulo_rad = radians(angulo)
-        
-        # Crear la matriz de rotación
-        matriz_rotacion = mathutils.Matrix.Rotation(angulo_rad, 4, eje)
-        
-        if espacio_local:
-            # Aplicar la rotación en el espacio local
-            objeto.matrix_local = matriz_rotacion @ objeto.matrix_local
-        else:
-            # Aplicar la rotación en el espacio global
-            objeto.matrix_world = matriz_rotacion @ objeto.matrix_world
- 
-    @staticmethod  
-    def posicionar_objeto(objeto, nueva_posicion, espacio_local=True):
-        """
-        
-        import bpy
-    import mathutils
-        Posiciona un objeto en una nueva ubicación.
-
-        :param objeto: El objeto a posicionar.
-        :param nueva_posicion: Vector de la nueva posición.
-        :param espacio_local: Booleano que indica si la posición es en espacio local (True) o global (False).
-        """
-        if espacio_local:
-            objeto.location = nueva_posicion
-        else:
-            objeto.matrix_world.translation = nueva_posicion
-
-        
-    
-class GioVectores:   
-    @staticmethod  
-    def direccion_entreVectreVectores(v1, v2):
-        """
-        import numpy as np
-        Calcula la dirección normalizada desde el vector v1 hasta el vector v2.
-
-        :param v1: Primer vector (origen).
-        :param v2: Segundo vector (destino).
-        :return: Vector de dirección normalizado desde v1 hasta v2.
-        """
-        # Convertir las entradas a arrays de numpy
-        v1 = np.array(v1)
-        v2 = np.array(v2)
-        
-        # Calcular el vector dirección
-        direccion = v2 - v1
-        
-        # Calcular la magnitud del vector dirección
-        magnitud = np.linalg.norm(direccion)
-        
-        # Verificar que la magnitud no sea cero para evitar división por cero
-        if magnitud == 0:
-            raise ValueError("Los vectores v1 y v2 son iguales; no se puede calcular una dirección.")
-        
-        # Normalizar el vector dirección
-        direccion_normalizada = direccion / magnitud
-        
-        return direccion_normalizada
-
-
-
-class GioCurva:
-     
-
-    def obtener_puntos_curva_en_global(objeto_curva):
-        """
-        
-        import bpy
-        Retorna una lista de puntos de control de la curva en coordenadas globales.
-
-        :param objeto_curva: Objeto de tipo curva en Blender.
-        :return: Lista de vectores que representan los puntos de control en coordenadas globales.
-        """
-        if objeto_curva.type != 'CURVE':
-            raise TypeError("El objeto proporcionado no es una curva.")
-
-        # Obtener la matriz de transformación del objeto
-        matriz_mundo = objeto_curva.matrix_world
-
-        puntos_globales = []
-
-        # Iterar sobre los splines de la curva
-        for spline in objeto_curva.data.splines:
-            # Verificar el tipo de spline
-            if spline.type == 'BEZIER':
-                # Para splines de tipo Bézier
-                for punto in spline.bezier_points:
-                    # Transformar la coordenada del punto a espacio global
-                    punto_global = matriz_mundo @ punto.co
-                    puntos_globales.append(punto_global)
-            else:
-                # Para otros tipos de splines (por ejemplo, NURBS o POLY)
-                for punto in spline.points:
-                    # Transformar la coordenada del punto a espacio global
-                    # Nota: punto.co es un vector de 4 dimensiones (x, y, z, w)
-                    # Se debe convertir a un vector de 3 dimensiones
-                    punto_global = matriz_mundo @ punto.co.to_3d()
-                    puntos_globales.append(punto_global)
-
-        return puntos_globales
- 
-    
-class GioMesh:
-            
-    @staticmethod   
-    def obtener_normal_cara_seleccionada(objeto):
-        """
-        Retorna el vector normal de la cara seleccionada del objeto proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :return: Vector normal de la cara seleccionada o None si no hay una única cara seleccionada.
-        """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
-
-        # Verificar si estamos en modo edición y cambiar si es necesario
-        modo_inicial = bpy.context.object.mode
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
-
-        # Acceder a la malla en modo edición
-        bm = bmesh.from_edit_mesh(objeto.data)
-
-        # Obtener las caras seleccionadas
-        caras_seleccionadas = [f for f in bm.faces if f.select]
-
-        # Verificar que haya exactamente una cara seleccionada
-        if len(caras_seleccionadas) != 1:
-            # Restaurar el modo inicial si fue cambiado
-            if modo_inicial != 'EDIT':
-                bpy.ops.object.mode_set(mode=modo_inicial)
-            return None
-
-        # Obtener la normal de la cara seleccionada
-        normal = caras_seleccionadas[0].normal.copy()
-
-        # Restaurar el modo inicial si fue cambiado
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode=modo_inicial)
-
-        return normal    
-
-    def alinear_objeto_a_vector(objeto, vector_alineacion, eje='Z'):
-        """
-        Alinea el eje especificado del objeto al vector de alineación proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :param vector_alineacion: Vector hacia el cual se alineará el eje del objeto.
-        :param eje: Eje del objeto que se alineará ('X', 'Y' o 'Z').
-        """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
-
-        # Normalizar el vector de alineación
-        vector_alineacion = vector_alineacion.normalized()
-
-        # Definir el eje local del objeto a alinear
-        if eje == 'X':
-            eje_local = mathutils.Vector((1, 0, 0))
-        elif eje == 'Y':
-            eje_local = mathutils.Vector((0, 1, 0))
-        elif eje == 'Z':
-            eje_local = mathutils.Vector((0, 0, 1))
-        else:
-            raise ValueError("El eje debe ser 'X', 'Y' o 'Z'.")
-
-        # Calcular la rotación necesaria
-        rotacion = eje_local.rotation_difference(vector_alineacion).to_euler()
-
-        # Aplicar la rotación al objeto
-        objeto.rotation_euler = rotacion
-        objeto.rotation_euler.rotate(objeto.matrix_world.to_euler())
-
+         
     @staticmethod
     def establecer_objeto_activo(objeto):
         """
-         import bpy import bmesh
-        Establece el objeto proporcionado como el activo y deselecciona todos los demás objetos.
+        Establece el objeto proporcionado como el objeto activo y deselecciona los demás.
 
-        :param objeto: El objeto que se desea establecer como activo.
+        :param objeto: Referencia al objeto de tipo bpy.types.Object que se desea activar.
         """
+        if not isinstance(objeto, bpy.types.Object):
+            raise TypeError("El parámetro proporcionado no es un objeto válido de Blender.")
+
         # Deseleccionar todos los objetos
         bpy.ops.object.select_all(action='DESELECT')
-        
-        # Seleccionar el objeto proporcionado
+
+        # Seleccionar el objeto especificado
         objeto.select_set(True)
-        
-        # Establecer el objeto como activo
+
+      
         bpy.context.view_layer.objects.active = objeto
 
-
-    @staticmethod
-    def obtener_normal_vertice_seleccionado(objeto):
-        """ 
-        import bpy import bmesh
-        Retorna el vector normal del vértice seleccionado del objeto proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :return: Vector normal del vértice seleccionado o None si no hay un único vértice seleccionado.
-        """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
-
-        # Verificar si estamos en modo edición y cambiar si es necesario
-        modo_inicial = bpy.context.object.mode
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
-
-        # Acceder a la malla en modo edición
-        bm = bmesh.from_edit_mesh(objeto.data)
-
-        # Obtener los vértices seleccionados
-        vertices_seleccionados = [v for v in bm.verts if v.select]
-
-        # Verificar que haya exactamente un vértice seleccionado
-        if len(vertices_seleccionados) != 1:
-            # Restaurar el modo inicial si fue cambiado
-            if modo_inicial != 'EDIT':
-                bpy.ops.object.mode_set(mode=modo_inicial)
-            return None
-
-        # Obtener la normal del vértice seleccionado
-        normal = vertices_seleccionados[0].normal.copy()
-
-        # Restaurar el modo inicial si fue cambiado
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode=modo_inicial)
-
-        return normal
-
-
-
-
-
-     
-    @staticmethod
-    def obtener_aristas_seleccionadas(objeto):
-        """
-        
-        import bmesh
-        Retorna una lista de aristas seleccionadas del objeto proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :return: Lista de aristas seleccionadas.
-        """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
-
-        # Verificar si estamos en modo edición y cambiar si es necesario
-        modo_inicial = bpy.context.object.mode
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
-
-        # Acceder a la malla en modo edición
-        bm = bmesh.from_edit_mesh(objeto.data)
-
-        # Obtener las aristas seleccionadas
-        aristas_seleccionadas = [e for e in bm.edges if e.select]
-
-        # Restaurar el modo inicial si fue cambiado
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode=modo_inicial)
-
-        return aristas_seleccionadas
-    
-    @staticmethod
-    def obtener_vertices_seleccionados(objeto):
-        """
-        
-        import bmesh
-        Retorna una lista de vértices seleccionados del objeto proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :return: Lista de vértices seleccionados.
-        """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
-
-        # Verificar si estamos en modo edición y cambiar si es necesario
-        modo_inicial = bpy.context.object.mode
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
-
-        # Acceder a la malla en modo edición
-        bm = bmesh.from_edit_mesh(objeto.data)
-
-        # Obtener los vértices seleccionados
-        vertices_seleccionados = [v for v in bm.verts if v.select]
-
-        # Restaurar el modo inicial si fue cambiado
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode=modo_inicial)
-
-        return vertices_seleccionados
-
-
-
-
-
-     
-    @staticmethod
-    def obtener_posicion_vertice_edge_face(elemento, objeto, global_coords=False):
-        """
-         import bmesh
-        Retorna la posición del elemento proporcionado (vértice, arista o cara).
-
-        :param elemento: Vértice (BMVert), arista (BMEdge) o cara (BMFace) de bmesh.
-        :param objeto: Objeto de tipo malla en Blender.
-        :param global_coords: Booleano que indica si se desea la posición en coordenadas globales.
-        :return: Vector de posición del elemento o None si el tipo no es compatible.
-        """
-        if isinstance(elemento, bmesh.types.BMVert):
-            posicion = elemento.co.copy()
-        elif isinstance(elemento, bmesh.types.BMEdge):
-            # Posición media de los vértices de la arista
-            posicion = (elemento.verts[0].co + elemento.verts[1].co) / 2
-        elif isinstance(elemento, bmesh.types.BMFace):
-            # Centroide de la cara
-            posicion = elemento.calc_center_median()
-        else:
-            return None
-
-        if global_coords:
-            # Transformar a coordenadas globales
-            posicion = objeto.matrix_world @ posicion
-
-        return posicion
-    @staticmethod
-    def obtener_normal_vertice_edge_face(elemento):
-        """
-        
-        import bmesh
-        Retorna la normal del elemento proporcionado (vértice, arista o cara).
-
-        :param elemento: Vértice (BMVert), arista (BMEdge) o cara (BMFace) de bmesh.
-        :return: Vector normal del elemento o None si el tipo no es compatible.
-        """
-        if isinstance(elemento, bmesh.types.BMVert):
-            return elemento.normal.copy()
-        elif isinstance(elemento, bmesh.types.BMEdge):
-            # La normal de una arista puede definirse como la media de las normales de las caras adyacentes
-            if len(elemento.link_faces) == 0:
-                return None  # Arista sin caras adyacentes
-            normal = sum((f.normal for f in elemento.link_faces), bpy.mathutils.Vector())
-            return normal.normalized()
-        elif isinstance(elemento, bmesh.types.BMFace):
-            return elemento.normal.copy()
-        else:
-            return None 
-    @staticmethod
-    def obtener_caras_seleccionadas(objeto):
-        """
-        import bmesh
-        Retorna una lista de caras seleccionadas del objeto proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :return: Lista de caras seleccionadas.
-        """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
-
-        # Verificar si estamos en modo edición y cambiar si es necesario
-        modo_inicial = bpy.context.object.mode
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
-
-        # Acceder a la malla en modo edición
-        bm = bmesh.from_edit_mesh(objeto.data)
-
-        # Obtener las caras seleccionadas
-        caras_seleccionadas = [f for f in bm.faces if f.select]
-
-        # Restaurar el modo inicial si fue cambiado
-        if modo_inicial != 'EDIT':
-            bpy.ops.object.mode_set(mode=modo_inicial)
-
-        return caras_seleccionadas
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-########################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
-    
-"""  bl_label = "Mi Panel"
-    bl_idname = "VIEW3D_PT_mi_panel"
- 
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "Tool"
-    
-    bpy.types.Scene.my_float 
-    """
-#registra la clase 
-class GioBotonSimple(bpy.types.Operator):
-    bl_idname = "gio.botonsimple"
-    bl_label = "Acción Personalizada"
-    bl_description = "Ejecuta una función personalizada" 
-    action_function: bpy.props.StringProperty()
-    def execute(self, context):
-        if self.action_function in globals():
-            func = globals()[self.action_function]
-            func()  
-        else:
-            self.report({'ERROR'}, f"Función '{self.action_function}' no encontrada")
-        return {'FINISHED'}
   
-
-class Gio:
-    @staticmethod
-    def boton(layout, text, nombreStrinfFuncionOnClik):
-        layout.operator("gio.botonsimple", text=text).action_function = nombreStrinfFuncionOnClik
-        
-      
-
-    @staticmethod
-    def seleccionar_objeto(name, description, update_callback):
-        return bpy.props.PointerProperty(
-            name=name,
-            description=description,
-            type=bpy.types.Object,
-            update=update_callback
-        )
-
-    @staticmethod
-    def text_input(name, description, default_value, update_callback):
-        return bpy.props.StringProperty(
-            name=name,
-            description=description,
-            default=default_value,
-            update=update_callback
-        )
-
-    @staticmethod
-    def number_input(name, description, default_value, min_value, max_value, update_callback):
-        return bpy.props.IntProperty(
-            name=name,
-            description=description,
-            default=default_value,
-            min=min_value,
-            max=max_value,
-            update=update_callback
-        )
-
-    @staticmethod
-    def float_input(name, description, default_value, min_value, max_value, update_callback):
-        return bpy.props.FloatProperty(
-            name=name,
-            description=description,
-            default=default_value,
-            min=min_value,
-            max=max_value,
-            update=update_callback
-        )
-
-    @staticmethod
-    def range_slider(name, description, default_value, min_value, max_value, update_callback):
-        return bpy.props.FloatProperty(
-            name=name,
-            description=description,
-            default=default_value,
-            min=min_value,
-            max=max_value,
-            subtype='FACTOR',
-            update=update_callback
-        )
-    @staticmethod    
-    def addNoBoton(layout,scene,nombrePropiedadScene):
-        layout.prop(scene, nombrePropiedadScene)            
-        pass
-
-## funcionalidad que hace
-
  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###elementos
-varobj_uno_pos=None
-varobj_dos_pos=None
-  
-def callbackobj_uno_pos(self,context):
-    global varobj_uno_pos 
-    varobj_uno_pos=self.obj_uno_pos;
-
-def callbackobj_dos_pos(self,context):
-    global varobj_uno_pos 
-    varobj_dos_pos=self.obj_dos_pos;
-    print(varobj_dos_pos);
-     
-def onclikposicitonobjet1():
-    
-    pass  
-    
-    pass
-def crerElementos():
-    bpy.types.Scene.obj_uno_pos= Gio.seleccionar_objeto("nombre obj_uno_pos","",callbackobj_uno_pos);
-    bpy.types.Scene.obj_dos_pos= Gio.seleccionar_objeto("nombre obj_dos_poss","",callbackobj_dos_pos);
-    pass  
-    
-
-def deleteElementos():
-    
-    del bpy.types.Scene.obj_uno_pos
-    
-    pass    
-
-
-def pasosdelProyectoposicionarobjetos1():
-    caraseleccionada=GioMesh.obtener_normal_cara_seleccionada(varobj_dos_pos)
-     
-    pass
-# Panel personalizado en la región 'UI'
-class CustomPanelPos(bpy.types.Panel):
-    bl_label = "Panel Personalizado"
-    bl_idname = "VIEW3D_PT_custom_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "Tool"
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
- 
-        
-        Gio.addNoBoton(layout,scene,"obj_uno_pos");
-        Gio.addNoBoton(layout,scene,"obj_dos_pos");
-        Gio.boton( layout,"posicionar objeto","onclikposicitonobjet1");
-
-# Registro de clases
-classes = [GioBotonSimple,  CustomPanelPos]
-
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-    crerElementos()
-
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-    # Eliminar propiedades del contexto de la escena
-    deleteElementos();
-
-if __name__ == "__main__":
-    register()
-import bpy
-
-import mathutils
-import bmesh
-
-
-
-
-##utilidad funcionesclases
-
    
 
-class GioObjetos:
-    @staticmethod 
-    def duplicar_objeto_completamente(objeto_original):
-        """
-        Duplica un objeto en Blender, creando copias independientes de su malla, materiales y animaciones.
-
-        :param objeto_original: El objeto a duplicar.
-        :return: El nuevo objeto duplicado.
-        """
-        # Crear una copia del objeto
-        objeto_duplicado = objeto_original.copy()
-        
-        # Crear una copia independiente de los datos de la malla
-        if objeto_duplicado.data:
-            objeto_duplicado.data = objeto_duplicado.data.copy()
-        
-        # Crear copias independientes de los materiales
-        if objeto_duplicado.data.materials:
-            objeto_duplicado.data.materials = [mat.copy() for mat in objeto_duplicado.data.materials]
-        
-        # Crear una copia independiente de la acción (animación)
-        if objeto_duplicado.animation_data and objeto_duplicado.animation_data.action:
-            objeto_duplicado.animation_data.action = objeto_duplicado.animation_data.action.copy()
-        
-        # Limpiar cualquier dato de animación no deseado
-        objeto_duplicado.animation_data_clear()
-        
-        # Enlazar el nuevo objeto a la colección actual
-        bpy.context.collection.objects.link(objeto_duplicado)
-        return objeto_duplicado
+class GioObject:
     
     
-    @staticmethod 
-    def escalar_objeto(objeto, factor_escala, espacio_local=True):
-        """
-        
-        import bpy
-import mathutils
-        Escala un objeto según un factor dado.
-
-        :param objeto: El objeto a escalar.
-        :param factor_escala: Vector que define el factor de escala en cada eje.
-        :param espacio_local: Booleano que indica si la escala es en espacio local (True) o global (False).
-        """
-        if espacio_local:
-            objeto.scale = factor_escala
-        else:
-            # Crear la matriz de escala
-            matriz_escala = mathutils.Matrix.Diagonal(factor_escala).to_4x4()
-            # Aplicar la escala en el espacio global
-            objeto.matrix_world = matriz_escala @ objeto.matrix_world
-
  
     @staticmethod  
-    def rotar_objeto(objeto, angulo, eje=mathutils.Vector((0, 0, 1)), espacio_local=True):
+    def create_transformation_matrix(object_name, normal, up=Vector((0, 0, 1)), center=None):
         """
-        
-            import bpy
-import mathutils
-from math import radians
-        Rota un objeto alrededor de un eje específico.
-
-        :param objeto: El objeto a rotar.
-        :param angulo: Ángulo de rotación en grados.
-        :param eje: Vector que define el eje de rotación.
-        :param espacio_local: Booleano que indica si la rotación es en espacio local (True) o global (False).
-        """
-        # Convertir el ángulo a radianes
-        angulo_rad = radians(angulo)
-        
-        # Crear la matriz de rotación
-        matriz_rotacion = mathutils.Matrix.Rotation(angulo_rad, 4, eje)
-        
-        if espacio_local:
-            # Aplicar la rotación en el espacio local
-            objeto.matrix_local = matriz_rotacion @ objeto.matrix_local
-        else:
-            # Aplicar la rotación en el espacio global
-            objeto.matrix_world = matriz_rotacion @ objeto.matrix_world
- 
-    @staticmethod  
-    def posicionar_objeto(objeto, nueva_posicion, espacio_local=True):
-        """
-        
         import bpy
-    import mathutils
-        Posiciona un objeto en una nueva ubicación.
+        from mathutils import Vector, Matrix
+        Creates a transformation matrix based on a normal vector and applies it to a given object.
 
-        :param objeto: El objeto a posicionar.
-        :param nueva_posicion: Vector de la nueva posición.
-        :param espacio_local: Booleano que indica si la posición es en espacio local (True) o global (False).
-        """
-        if espacio_local:
-            objeto.location = nueva_posicion
-        else:
-            objeto.matrix_world.translation = nueva_posicion
-
-        
-    
-class GioVectores:   
-    @staticmethod  
-    def direccion_entreVectreVectores(v1, v2):
-        """
-        import numpy as np
-        Calcula la dirección normalizada desde el vector v1 hasta el vector v2.
-
-        :param v1: Primer vector (origen).
-        :param v2: Segundo vector (destino).
-        :return: Vector de dirección normalizado desde v1 hasta v2.
-        """
-        # Convertir las entradas a arrays de numpy
-        v1 = np.array(v1)
-        v2 = np.array(v2)
-        
-        # Calcular el vector dirección
-        direccion = v2 - v1
-        
-        # Calcular la magnitud del vector dirección
-        magnitud = np.linalg.norm(direccion)
-        
-        # Verificar que la magnitud no sea cero para evitar división por cero
-        if magnitud == 0:
-            raise ValueError("Los vectores v1 y v2 son iguales; no se puede calcular una dirección.")
-        
-        # Normalizar el vector dirección
-        direccion_normalizada = direccion / magnitud
-        
-        return direccion_normalizada
-
-
-
-class GioCurva:
-     
-
-    def obtener_puntos_curva_en_global(objeto_curva):
-        """
-        
-        import bpy
-        Retorna una lista de puntos de control de la curva en coordenadas globales.
-
-        :param objeto_curva: Objeto de tipo curva en Blender.
-        :return: Lista de vectores que representan los puntos de control en coordenadas globales.
-        """
-        if objeto_curva.type != 'CURVE':
-            raise TypeError("El objeto proporcionado no es una curva.")
-
-        # Obtener la matriz de transformación del objeto
-        matriz_mundo = objeto_curva.matrix_world
-
-        puntos_globales = []
-
-        # Iterar sobre los splines de la curva
-        for spline in objeto_curva.data.splines:
-            # Verificar el tipo de spline
-            if spline.type == 'BEZIER':
-                # Para splines de tipo Bézier
-                for punto in spline.bezier_points:
-                    # Transformar la coordenada del punto a espacio global
-                    punto_global = matriz_mundo @ punto.co
-                    puntos_globales.append(punto_global)
-            else:
-                # Para otros tipos de splines (por ejemplo, NURBS o POLY)
-                for punto in spline.points:
-                    # Transformar la coordenada del punto a espacio global
-                    # Nota: punto.co es un vector de 4 dimensiones (x, y, z, w)
-                    # Se debe convertir a un vector de 3 dimensiones
-                    punto_global = matriz_mundo @ punto.co.to_3d()
-                    puntos_globales.append(punto_global)
-
-        return puntos_globales
- 
-    
-class GioMesh:
-    @staticmethod   
-    def get_face_normal_vector(face, global_space=False, normalized=True):
-        """
-        Obtiene la normal de una cara en coordenadas locales o globales.
-        
         Args:
-            face: Cara BMesh
-            global_space: Si True, transforma la normal al espacio global
-            normalized: Si True, devuelve el vector normalizado
-        
+            object_name (str): The name of the object to transform.
+            normal (Vector): The normal vector used to orient the transformation.
+            up (Vector, optional): The up vector for the transformation. Defaults to (0, 0, 1).
+            center (Vector, optional): The center point for the transformation. 
+                                        If None, only rotation is applied; otherwise, translation is included.
+
         Returns:
-            Vector normal
+            Matrix: The calculated transformation matrix.  Returns None if the object is not found.
         """
-        normal = face.normal
-        if global_space:
-            obj = bpy.context.active_object
-            normal = obj.matrix_world.to_3x3() @ normal
-        return normal.normalized() if normalized else normal
-            
+
+        try:
+            obj = bpy.data.objects[object_name]
+        except KeyError:
+            print(f"Object '{object_name}' not found.")
+            return None
+
+       
+        if abs(normal.x) < 0.999:
+            forward = Vector((1, 0, 0))
+        else:
+            forward = Vector((0, 1, 0))
+
+        right = forward.cross(up).normalized()
+        forward = up.cross(right).normalized()
+
+        if center is None:  # Apply only rotation
+            transform_matrix = Matrix((
+                (right.x, up.x, forward.x, 0.0),
+                (right.y, up.y, forward.y, 0.0),
+                (right.z, up.z, forward.z, 0.0),
+                (0.0, 0.0, 0.0, 1.0),
+            ))
+            obj.matrix_world = obj.matrix_world @ transform_matrix  
+
+
+        else:   
+            transform_matrix = Matrix((
+                (right.x, up.x, forward.x, center.x),
+                (right.y, up.y, forward.y, center.y),
+                (right.z, up.z, forward.z, center.z),
+                (0.0, 0.0, 0.0, 1.0),
+            ))
+            obj.matrix_world = transform_matrix
+
+        return transform_matrix
+  
+             
+
+    @staticmethod
+    def aligns_local_z_axis_of_Obj3d_with_vector3d(obj, direction):
+        """
+        from mathutils import Matrix, Vector
+        Aligns the local Z-axis of a 3D object with a given direction vector.
+
+        Args:
+        obj: The 3D object (Blender object) to rotate.
+        direction (Vector): The target direction vector. The object's 
+                            local Z-axis will be aligned with this vector.
+        """
+        rot_quat = direction.to_track_quat('Z', 'Y')
+        obj.rotation_euler = rot_quat.to_euler()
+
+
+    @staticmethod
+    def aligns_local_x_axis_of_Obj3d_with_vector3d(obj, direction):
+        """
+        from mathutils import Matrix, Vector
+        
+        Aligns the local X-axis of a 3D object with a given direction vector.
+
+        Args:
+        obj: The 3D object (Blender object) to rotate.
+        direction (Vector): The target direction vector. The object's
+                            local X-axis will be aligned with this vector.
+        """
+        direction.normalize()
+        rot_quat = direction.to_track_quat('X', 'Y')
+        obj.rotation_euler = rot_quat.to_euler()
+
+
+    @staticmethod
+    def aligns_local_y_axis_of_Obj3d_with_vector3d(obj, direction):
+        """
+        from mathutils import Matrix, Vector
+        Aligns the local Y-axis of a 3D object with a given direction vector.
+
+        Args:
+            obj: The 3D object (Blender object) to rotate.
+            direction (Vector): The target direction vector. The object's
+                            local Y-axis will be aligned with this vector.
+        """
+        direction.normalize()
+        rot_quat = direction.to_track_quat('Y', 'Z')
+        obj.rotation_euler = rot_quat.to_euler()
+     
+    @staticmethod 
+    def duplicar_objeto_completamente(objeto_original):
+  
+    
+        objeto_duplicado = objeto_original.copy()
+        
+      
+        if objeto_duplicado.data:
+            objeto_duplicado.data = objeto_duplicado.data.copy()
+        
+ 
+        if objeto_duplicado.data.materials:
+            objeto_duplicado.data.materials = [mat.copy() for mat in objeto_duplicado.data.materials]
+        
+    
+        if objeto_duplicado.animation_data and objeto_duplicado.animation_data.action:
+            objeto_duplicado.animation_data.action = objeto_duplicado.animation_data.action.copy()
+        
+    
+        objeto_duplicado.animation_data_clear()
+        
+        
+        bpy.context.collection.objects.link(objeto_duplicado)
+        return objeto_duplicado
+    
+    
+    @staticmethod 
+    def escalar_objeto(objeto, factor_escala, espacio_local=True):
+        """
+        
+        import bpy
+import mathutils
+        Escala un objeto según un factor dado.
+
+        :param objeto: El objeto a escalar.
+        :param factor_escala: Vector que define el factor de escala en cada eje.
+        :param espacio_local: Booleano que indica si la escala es en espacio local (True) o global (False).
+        """
+        if espacio_local:
+            objeto.scale = factor_escala
+        else:
+          
+            matriz_escala = mathutils.Matrix.Diagonal(factor_escala).to_4x4()
+      
+            objeto.matrix_world = matriz_escala @ objeto.matrix_world
+
+ 
+    @staticmethod  
+    def rotar_objeto(objeto, angulo, eje=mathutils.Vector((0, 0, 1)), espacio_local=True):
+        """
+        
+            import bpy
+import mathutils
+from math import radians
+        Rota un objeto alrededor de un eje específico.
+
+        :param objeto: El objeto a rotar.
+        :param angulo: Ángulo de rotación en grados.
+        :param eje: Vector que define el eje de rotación.
+        :param espacio_local: Booleano que indica si la rotación es en espacio local (True) o global (False).
+        """
+        # Convertir el ángulo a radianes
+        angulo_rad = radians(angulo)
+        
+        # Crear la matriz de rotación
+        matriz_rotacion = mathutils.Matrix.Rotation(angulo_rad, 4, eje)
+        
+        if espacio_local:
+            # Aplicar la rotación en el espacio local
+            objeto.matrix_local = matriz_rotacion @ objeto.matrix_local
+        else:
+            # Aplicar la rotación en el espacio global
+            objeto.matrix_world = matriz_rotacion @ objeto.matrix_world
+ 
+    @staticmethod  
+    def posicionar_objeto(objeto, nueva_posicion, espacio_local=True):
+        """
+        
+        import bpy
+    import mathutils
+        Posiciona un objeto en una nueva ubicación.
+
+        :param objeto: El objeto a posicionar.
+        :param nueva_posicion: Vector de la nueva posición.
+        :param espacio_local: Booleano que indica si la posición es en espacio local (True) o global (False).
+        """
+        if espacio_local:
+            objeto.location = nueva_posicion
+        else:
+            objeto.matrix_world.translation = nueva_posicion
+
+        
+    
+class GioVectores:
+    @staticmethod  
+    def dot_product(v1, v2):
+        """ import math
+        import mathutils Calcula el producto punto entre dos vectores."""
+        return v1.dot(v2)
+    @staticmethod  
+    def cross_product(v1, v2):
+        """ import math
+        import mathutils Calcula el producto cruz entre dos vectores."""
+        return v1.cross(v2)
+    @staticmethod  
+    def angle_between_vectors(v1, v2, degrees=True):
+        """ import math
+        import mathutils Calcula el ángulo entre dos vectores en radianes o grados."""
+        angle = v1.angle(v2)
+        return math.degrees(angle) if degrees else angle   
+    
+    
+    
+    
+    @staticmethod  
+    def direccion_entreVectreVectores(v1, v2):
+        """
+        import numpy as np
+        Calcula la dirección normalizada desde el vector v1 hasta el vector v2.
+
+        :param v1: Primer vector (origen).
+        :param v2: Segundo vector (destino).
+        :return: Vector de dirección normalizado desde v1 hasta v2.
+        """
+        # Convertir las entradas a arrays de numpy
+        v1 = np.array(v1)
+        v2 = np.array(v2)
+        
+        # Calcular el vector dirección
+        direccion = v2 - v1
+        
+        # Calcular la magnitud del vector dirección
+        magnitud = np.linalg.norm(direccion)
+        
+        # Verificar que la magnitud no sea cero para evitar división por cero
+        if magnitud == 0:
+            raise ValueError("Los vectores v1 y v2 son iguales; no se puede calcular una dirección.")
+        
+        # Normalizar el vector dirección
+        direccion_normalizada = direccion / magnitud
+        
+        return direccion_normalizada
+
+
+
+class GioCurva:
+     
+
+    def obtener_puntos_curva_en_global(objeto_curva):
+        """
+        
+        import bpy
+        Retorna una lista de puntos de control de la curva en coordenadas globales.
+
+        :param objeto_curva: Objeto de tipo curva en Blender.
+        :return: Lista de vectores que representan los puntos de control en coordenadas globales.
+        """
+        if objeto_curva.type != 'CURVE':
+            raise TypeError("El objeto proporcionado no es una curva.")
+
+        # Obtener la matriz de transformación del objeto
+        matriz_mundo = objeto_curva.matrix_world
+
+        puntos_globales = []
+
+        # Iterar sobre los splines de la curva
+        for spline in objeto_curva.data.splines:
+            # Verificar el tipo de spline
+            if spline.type == 'BEZIER':
+                # Para splines de tipo Bézier
+                for punto in spline.bezier_points:
+                    # Transformar la coordenada del punto a espacio global
+                    punto_global = matriz_mundo @ punto.co
+                    puntos_globales.append(punto_global)
+            else:
+                # Para otros tipos de splines (por ejemplo, NURBS o POLY)
+                for punto in spline.points:
+                    # Transformar la coordenada del punto a espacio global
+                    # Nota: punto.co es un vector de 4 dimensiones (x, y, z, w)
+                    # Se debe convertir a un vector de 3 dimensiones
+                    punto_global = matriz_mundo @ punto.co.to_3d()
+                    puntos_globales.append(punto_global)
+
+        return puntos_globales
+ 
+    
+class GioMesh:
+    @staticmethod 
+    def obtener_normal_cara(objeto):
+        # Asegurarse de que el objeto está en modo de edición
+        bpy.context.view_layer.objects.active = objeto
+        bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Obtener la malla del objeto
+        malla = bmesh.from_edit_mesh(objeto.data)
+        
+        # Buscar la cara seleccionada
+        for cara in malla.faces:
+            if cara.select:
+                # Retornar la normal de la cara seleccionada
+                
+
+                return cara.normal
+        
+        # Si no se encuentra una cara seleccionada, retornar None
+        return None
+
     @staticmethod   
     def obtener_normal_cara_seleccionada(objeto):
         """
@@ -919,39 +1226,7 @@ class GioMesh:
         if modo_inicial != 'EDIT':
             bpy.ops.object.mode_set(mode=modo_inicial)
 
-        return normal    
-
-    def alinear_objeto_a_vector(objeto, vector_alineacion, eje='Z'):
-        """
-        Alinea el eje especificado del objeto al vector de alineación proporcionado.
-
-        :param objeto: Objeto de tipo malla en Blender.
-        :param vector_alineacion: Vector hacia el cual se alineará el eje del objeto.
-        :param eje: Eje del objeto que se alineará ('X', 'Y' o 'Z').
-        """
-        if objeto.type != 'MESH':
-            raise TypeError("El objeto proporcionado no es una malla.")
-
-        # Normalizar el vector de alineación
-        vector_alineacion = vector_alineacion.normalized()
-
-        # Definir el eje local del objeto a alinear
-        if eje == 'X':
-            eje_local = mathutils.Vector((1, 0, 0))
-        elif eje == 'Y':
-            eje_local = mathutils.Vector((0, 1, 0))
-        elif eje == 'Z':
-            eje_local = mathutils.Vector((0, 0, 1))
-        else:
-            raise ValueError("El eje debe ser 'X', 'Y' o 'Z'.")
-
-        # Calcular la rotación necesaria
-        rotacion = eje_local.rotation_difference(vector_alineacion).to_euler()
-
-        # Aplicar la rotación al objeto
-        objeto.rotation_euler = rotacion
-        objeto.rotation_euler.rotate(objeto.matrix_world.to_euler())
-
+        return normal  
     @staticmethod
     def establecer_objeto_activo(objeto):
         """
@@ -1226,7 +1501,7 @@ class Gio:
       
 
     @staticmethod
-    def seleccionar_objeto(name, description, update_callback):
+    def seleccionar_objeto(name, description, update_callback=None): 
         return bpy.props.PointerProperty(
             name=name,
             description=description,
@@ -1310,21 +1585,41 @@ class Gio:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ###elementos
 varobj_uno_pos=None
 varobj_dos_pos=None
   
 def callbackobj_uno_pos(self,context):
     global varobj_uno_pos 
-    varobj_uno_pos=self.obj_uno_pos;
+    varobj_uno_pos= context.scene.obj_uno_pos
+    if varobj_uno_pos:
+        print(f"Objeto seleccionado 1: {varobj_uno_pos.name}")
 
 def callbackobj_dos_pos(self,context):
-    global varobj_uno_pos 
-    varobj_dos_pos=self.obj_dos_pos;
-    print(varobj_dos_pos);
+    global varobj_dos_pos 
+  
+    varobj_dos_pos = context.scene.obj_dos_pos
+    if varobj_dos_pos:
+        print(f"Objeto seleccionado 2: {varobj_dos_pos.name}")
      
 def onclikposicitonobjet1():
-    
+    pasosdelProyectoposicionarobjetos1()
     pass  
     
     pass
@@ -1340,9 +1635,25 @@ def deleteElementos():
     
     pass    
 
+ 
 
+ 
+    
+ 
 def pasosdelProyectoposicionarobjetos1():
-    caraseleccionada=GioMesh.obtener_normal_cara_seleccionada(varobj_dos_pos)
+    global varobj_uno_pos 
+    global varobj_dos_pos 
+    normalenlacara=GioMesh.obtener_normal_cara(varobj_dos_pos) 
+    GioObjetos. alinear_objeto_con_vector(varobj_uno_pos,normalenlacara);
+    
+ 
+ 
+ 
+    print(normalenlacara)
+    print(normalenlacara[0])
+    print("normalenlacara[0]")
+     
+    
      
     pass
 # Panel personalizado en la región 'UI'
