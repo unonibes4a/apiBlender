@@ -1077,6 +1077,36 @@ from math import radians
         
     
 class GioVectores:
+    @staticmethod 
+    def get_face_normal(face, global_space=False, normalized=True):
+        """
+        Obtiene la normal de una cara en coordenadas locales o globales.
+
+        Args:
+            face: Cara BMesh
+            global_space: Si True, transforma la normal al espacio global
+            normalized: Si True, devuelve el vector normalizado
+
+        Returns:
+            Vector normal
+        """
+        normal = face.normal
+        if global_space:
+            obj = bpy.context.active_object
+            normal = obj.matrix_world.to_3x3() @ normal
+        return normal.normalized() if normalized else normal
+    @staticmethod 
+    def compare_face_normals(face1, face2, threshold_deg=5.0):
+        """
+        Compara si dos caras tienen normales similares dentro de un umbral angular.
+        
+        Returns:
+            Tuple: (ángulo_en_grados, son_similares)
+        """
+        n1 = get_face_normal(face1)
+        n2 = get_face_normal(face2)
+        angle_deg = angle_between_vectors(n1, n2)
+        return angle_deg, angle_deg <= threshold_deg
     @staticmethod  
     def dot_product(v1, v2):
         """ import math
