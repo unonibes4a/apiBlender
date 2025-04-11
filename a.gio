@@ -30,7 +30,7 @@ class SelectObj:
     
     
     @staticmethod
-    def get_unselected_mesh_elements():
+    def get_unselected__mesh_elements_verts_face_edges():
         """
         Devuelve un diccionario con los elementos NO seleccionados (caras, aristas y vértices) del objeto activo.
         Ejemplo de retorno:
