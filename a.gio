@@ -26,6 +26,20 @@ class example:
 
 
 class SelectObj:
+    
+    
+    @staticmethod
+    def select_faces():
+        obj = bpy.context.active_object     
+        bm = bmesh.from_edit_mesh(obj.data)
+        if obj and obj.type == 'MESH':
+            bpy.ops.object.mode_set(mode='EDIT')
+            bm = bmesh.from_edit_mesh(obj.data)
+            #bm.transform(obj.matrix_world)
+            return bm.faces
+            pass               
+        
+ 
     @staticmethod
     def get_selecto_bj1_obj2():
        
