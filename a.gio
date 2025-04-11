@@ -28,6 +28,21 @@ class example:
 class SelectObj:
     
     
+    
+     
+    @staticmethod
+    def get_mesh_elementsFaces_verts_edges():
+        """Devuelve todos los elementos de malla (caras, aristas y vértices)"""
+        obj = bpy.context.active_object
+        if obj and obj.type == 'MESH':
+            bpy.ops.object.mode_set(mode='EDIT')
+            bm = bmesh.from_edit_mesh(obj.data)
+            return {
+                'faces': bm.faces,
+                'edges': bm.edges,
+                'verts': bm.verts
+            }
+        return None
     @staticmethod
     def select_faces():
         obj = bpy.context.active_object     
