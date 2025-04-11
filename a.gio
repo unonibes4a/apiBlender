@@ -29,6 +29,90 @@ class SelectObj:
     
     
     
+    @staticmethod
+    def get_unselected_mesh_elements():
+        """
+        Devuelve un diccionario con los elementos NO seleccionados (caras, aristas y vértices) del objeto activo.
+        Ejemplo de retorno:
+        {
+            'faces': [lista de caras NO seleccionadas],
+            'edges': [lista de aristas NO seleccionadas],
+            'verts': [lista de vértices NO seleccionados]
+        }
+        Si no hay objeto activo o no es una malla, devuelve None.
+        """
+        obj = bpy.context.active_object
+        
+        if not obj or obj.type != 'MESH':
+            return None
+        
+        # Asegurarse de estar en modo edición
+        if obj.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Obtener datos BMesh
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
+        bm.verts.ensure_lookup_table()
+        
+        # Filtrar solo los elementos NO seleccionados
+        unselected_faces = [face for face in bm.faces if not face.select]
+        unselected_edges = [edge for edge in bm.edges if not edge.select]
+        unselected_verts = [vert for vert in bm.verts if not vert.select]
+        
+        return {
+            'faces': unselected_faces,
+            'edges': unselected_edges,
+            'verts': unselected_verts
+        }
+    
+    
+    @staticmethod
+    def get_selected_mesh_elements_verts_face_edges():
+        """
+        import bpy
+        import bmesh
+        Devuelve un diccionario con los elementos seleccionados (caras, aristas y vértices) del objeto activo.
+        Ejemplo de retorno:
+        {
+            'faces': [lista de caras seleccionadas],
+            'edges': [lista de aristas seleccionadas],
+            'verts': [lista de vértices seleccionados]
+        }
+        Si no hay objeto activo o no es una malla, devuelve None.
+        """
+        obj = bpy.context.active_object
+
+        if not obj or obj.type != 'MESH':
+            return None
+
+        
+        if obj.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+     
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
+        bm.verts.ensure_lookup_table()
+
+       
+        selected_faces = [face for face in bm.faces if face.select]
+        selected_edges = [edge for edge in bm.edges if edge.select]
+        selected_verts = [vert for vert in bm.verts if vert.select]
+
+        return {
+            'faces': selected_faces,
+            'edges': selected_edges,
+            'verts': selected_verts
+        }
+    
+    
+    
+    
+    
+    
      
     @staticmethod
     def get_mesh_elementsFaces_verts_edges():
