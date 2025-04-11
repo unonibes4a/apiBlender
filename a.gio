@@ -1077,6 +1077,58 @@ from math import radians
         
     
 class GioVectores:
+    
+    @staticmethod 
+    def calculate_face_alignment(face, reference_vector=mathutils.Vector((0,0,1))):
+        """
+        Analiza la alineación de una cara respecto a un vector de referencia.
+        
+        Returns:
+            Dict con:
+            - angle_degrees: Ángulo con la referencia
+            - is_parallel: Si es paralelo (producto punto ≈ ±1)
+            - is_perpendicular: Si es perpendicular (producto punto ≈ 0)
+            - cross_product: Vector perpendicular a ambos
+        """
+        normal = get_face_normal(face)
+        dot = dot_product(normal, reference_vector)
+        angle = angle_between_vectors(normal, reference_vector)
+        
+        return {
+            'angle_degrees': angle,
+            'is_parallel': abs(abs(dot) - 1.0) < 1e-5,
+            'is_perpendicular': abs(dot) < 1e-5,
+            'cross_product': cross_product(normal, reference_vector),
+            'dot_product': dot
+        }
+    @staticmethod 
+    def find_faces_by_normal(reference_normal, threshold_deg=10.0, selected_only=True):
+        """
+        Encuentra caras cuya normal sea similar a un vector de referencia.
+        
+        Args:
+            reference_normal: Vector de referencia (normalizado)
+            threshold_deg: Umbral en grados
+            selected_only: Buscar solo en caras seleccionadas
+        
+        Returns:
+            Lista de caras que cumplen el criterio
+        """
+        obj = bpy.context.active_object
+        bm = bmesh.from_edit_mesh(obj.data)
+        matching_faces = []
+        
+        for face in bm.faces:
+            if selected_only and not face.select:
+                continue
+                
+            face_normal = get_face_normal(face)
+            angle = angle_between_vectors(face_normal, reference_normal)
+            
+            if angle <= threshold_deg:
+                matching_faces.append(face)
+        
+        return matching_faces
     @staticmethod 
     def get_face_normal(face, global_space=False, normalized=True):
         """
