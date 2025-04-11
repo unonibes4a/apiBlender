@@ -117,6 +117,101 @@ class SelectObj:
     
     
     
+    
+ 
+
+    @staticmethod
+    def get_verts_edges_by_normal_threshold_deg(reference_normal=Vector((0, 0, 1)), threshold_deg=90.0, selected_only=False):
+        """      import bpy
+        import bmesh
+        import math
+        from mathutils import Vector
+        Select vertices and edges based on the angle between their normal and a reference normal.
+
+        Args:
+        reference_normal (Vector): Reference normal vector to compare against
+        threshold_deg (float): Angle threshold in degrees
+        selected_only (bool): Only consider selected elements if True
+
+        Returns:
+        tuple: (matching_verts, matching_edges)
+        """
+        obj = bpy.context.active_object
+        bpy.ops.object.mode_set(mode='EDIT')
+        bm = bmesh.from_edit_mesh(obj.data)
+        
+        # Ensure normals are calculated
+        bm.verts.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
+        
+        matching_verts = []
+        matching_edges = []
+        reference_normal = reference_normal.normalized()
+        threshold_rad = math.radians(threshold_deg)
+        
+        # Process vertices
+        for vert in bm.verts:
+            if selected_only and not vert.select:
+                continue
+                
+            # For vertices, we'll use the average normal of connected faces
+            if vert.link_faces:
+                normal_sum = Vector((0, 0, 0))
+                for face in vert.link_faces:
+                    normal_sum += face.normal
+                vert_normal = normal_sum.normalized()
+                
+                angle = vert_normal.angle(reference_normal)
+                if angle <= threshold_rad:
+                    vert.select = True
+                    matching_verts.append(vert)
+        
+        # Process edges
+        for edge in bm.edges:
+            if selected_only and not edge.select:
+                continue
+                
+            # For edges, we'll use the average normal of connected faces
+            if edge.link_faces:
+                normal_sum = Vector((0, 0, 0))
+                for face in edge.link_faces:
+                    normal_sum += face.normal
+                edge_normal = normal_sum.normalized()
+                
+                angle = edge_normal.angle(reference_normal)
+                if angle <= threshold_rad:
+                    edge.select = True
+                    matching_edges.append(edge)
+        
+        bmesh.update_edit_mesh(obj.data)
+        return matching_verts, matching_edges
+    
+    
+    @staticmethod
+    def get_faces_by_normal_threshold_deg(reference_normal = Vector((0, 0, 1)), threshold_deg=90.0, selected_only=False):    
+        obj = bpy.context.active_object
+        bpy.ops.object.mode_set(mode='EDIT')
+        bm = bmesh.from_edit_mesh(obj.data)
+        matching_faces = []
+        reference_normal = reference_normal.normalized()
+        
+        for face in bm.faces:
+            if selected_only and not face.select:
+                continue
+                
+            face_normal = face.normal.normalized()
+            angle = face_normal.angle(reference_normal)
+            angle_deg = math.degrees(angle)
+            
+            if angle_deg <= threshold_deg:
+                face.select=True
+                matching_faces.append(face)
+            bmesh.update_edit_mesh(bpy.context.active_object.data)
+        
+        return matching_faces
+    
+    
     @staticmethod
     def get_unselected__mesh_elements_verts_face_edges():
         """
