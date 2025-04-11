@@ -12,13 +12,101 @@ class example:
          
     def imports():
         """
-            import bpy
-            import bmesh
-            from mathutils import Vector
 
             import bpy
             import bmesh
+            import math
             from mathutils import Vector
+            import bpy
+            import bmesh
+            import mathutils
+            import numpy as np
+            from math import radians
+
+            # CORE BLENDER
+            import bpy
+            import bpy_extras
+            import blf  # Para dibujar texto en la vista 3D
+
+            # GEOMETRY & MATH
+            import bmesh
+            import math
+            from mathutils import Vector, Matrix, Euler, Quaternion
+            import mathutils.geometry as geom_utils
+            import mathutils.noise as noise_utils
+
+            # 3D VIEWPORT DRAWING
+            from bgl import glEnable, glDisable, GL_BLEND  # OpenGL wrappers
+            from gpu_extras.batch import batch_for_shader  # Dibujo GPU
+            import gpu  # Sistema gráfico
+
+            # PAINT & TEXTURES
+            from bpy_extras.image_utils import load_image  # Manejo de imágenes
+            import bpy_extras.paint_utils  # Herramientas de pintura
+
+            # IMAGE PROCESSING (requieren instalación)
+            try:
+            import numpy as np  # Para arrays de imágenes
+            from PIL import Image  # Procesamiento avanzado
+            except ImportError:
+            print("Advertencia: numpy/PIL no instalados")
+
+            # DEBUG & PROFILING
+            import cProfile  # Para optimización
+            import timeit  # Medición de tiempos
+
+            # CUSTOM CATEGORIES EXAMPLE
+            MODULE_CATEGORIES = {
+            'Core Blender': ['bpy', 'bpy_extras', 'blf'],
+            'Geometría': ['bmesh', 'math', 'mathutils'],
+            'Visualización': ['bgl', 'gpu', 'gpu_extras'],
+            'Imágenes': ['PIL', 'numpy'],
+            'Debug': ['cProfile', 'timeit']
+            }
+
+            def count_imports_by_category():
+
+            total = sum(len(mods) for mods in MODULE_CATEGORIES.values())
+            print(f"\nTOTAL IMPORTS: {total} organizados en {len(MODULE_CATEGORIES)} categorías")
+
+            for category, modules in MODULE_CATEGORIES.items():
+            print(f"\n[{category.upper()}]")
+            for mod in modules:
+            try:
+            globals()[mod]  # Verifica si el módulo está cargado
+            print(f"✓ {mod}")
+            except KeyError:
+            print(f"× {mod} (no disponible)")
+
+            # Ejecutar el contador
+            count_imports_by_category()
+
+            from bpy_extras import particle_utils
+            from bpy_extras import anim_utils
+            from bpy_extras import io_utils
+            import bpy  # API principal (objetos, escena, operadores)
+            import bpy_extras  # Utilidades adicionales (coordenadas, transformaciones)
+            import blf  # Dibujar texto en el viewport (para HUDs o debug)
+            import bmesh  # Edición de mallas de bajo nivel
+            import math  # Funciones matemáticas (sqrt, sin, cos...)
+            from mathutils import Vector, Matrix, Euler, Quaternion  # Estructuras 3D
+            import mathutils.geometry  # Intersecciones, interpolaciones
+            import mathutils.noise  # Generación de ruido procedural
+
+            import gpu  # Sistema gráfico (shaders, batches)
+            from gpu_extras.batch import batch_for_shader  # Dibujar geometría
+            from bgl import glEnable, glDisable, GL_BLEND, GL_DEPTH_TEST  # OpenGL
+            # Partículas
+            from bpy_extras import particle_utils
+
+            # Animación
+            from bpy_extras import anim_utils
+
+            # Importación/Exportación
+            from bpy_extras.io_utils import ImportHelper, ExportHelper
+
+
+
 
         """
         
