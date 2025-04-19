@@ -117,8 +117,50 @@ class SelectObj:
     
     
     
-    
- 
+        
+    @staticmethod   
+    def uvsMove_postion(obj):
+        """ import bpy
+        from mathutils import Vector """
+        if obj.type == 'MESH' and obj.data.uv_layers:
+            bpy.ops.object.select_all(action='DESELECT') 
+            bpy.context.view_layer.objects.active = obj    
+            obj.select_set(True)
+            mesh = obj.data   
+            uv_layer = mesh.uv_layers.active.data    
+            global_pos = obj.matrix_world.translation
+            a=0
+            b=0
+            if(global_pos.x>global_pos.z):
+                a=global_pos.x
+                pass
+            else:
+                a=global_pos.z
+                pass
+            
+            if(global_pos.y>global_pos.z):
+                b=global_pos.x
+                pass
+            else:
+                b=global_pos.z
+                pass
+                
+            
+            u_offset =a #global_pos.x
+            v_offset =b #global_pos.y            
+            for poly in mesh.polygons:
+                for loop_idx in poly.loop_indices:
+                    uv = uv_layer[loop_idx].uv
+                    uv_layer[loop_idx].uv = Vector((uv.x  + u_offset, uv.y + v_offset))
+            
+    @staticmethod
+    def selecteds_objs():
+        return  bpy.context.selected_objects
+        pass
+    @staticmethod
+    def clasicofor():
+        for obj in arrays:
+            pass
 
     @staticmethod
     def get_verts_edges_by_normal_threshold_deg(reference_normal=Vector((0, 0, 1)), threshold_deg=90.0, selected_only=False):
