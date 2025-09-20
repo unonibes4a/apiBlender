@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentador de Clases JS/Python</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #e0e0e0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .upload-area {
+            border: 2px dashed #999;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            background: #f9f9f9;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #666;
+            background: #f0f0f0;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #999;
+            border-radius: 6px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .content-area {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: #e8e8e8;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            height: fit-content;
+        }
+
+        .class-list {
+            list-style: none;
+        }
+
+        .class-item {
+            padding: 8px 12px;
+            margin: 2px 0;
+            background: #d5d5d5;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #bbb;
+        }
+
+        .class-item:hover {
+            background: #c5c5c5;
+        }
+
+        .class-item.active {
+            background: #b5b5b5;
+            border-color: #999;
+        }
+
+        .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            min-height: 600px;
+        }
+
+        .class-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+
+        .class-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #444;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin: 20px 0 10px 0;
+            color: #555;
+            background: #e5e5e5;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+
+        .method-item, .property-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .method-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .method-name, .property-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .parameters {
+            color: #666;
+            font-size: 14px;
+            margin-left: 10px;
+            margin-bottom: 10px;
+        }
+
+        .code-section {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .code-header {
+            background: #e9ecef;
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .copy-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+        }
+
+        .copy-btn.copied {
+            background: #2196F3;
+        }
+
+        .code-block {
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        .example-section {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        input[type="text"] {
+            font-size: 14px;
+        }
+
+        #loadBtn:hover {
+            background: #c0c0c0;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #e8e8e8;
+            border: 1px solid #ccc;
+        }
+
+        .python-indicator {
+            background: #306998;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .js-indicator {
+            background: #f7df1e;
+            color: black;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Documentador Automático de Clases JavaScript/Python</h1>
+            <div class="upload-area">
+                <input type="text" id="fileUrl" placeholder="Nombre del archivo .txt (ej: a.txt)" value="" style="width: 70%; padding: 10px; margin-right: 10px; border: 1px solid #999; border-radius: 4px;">
+                <button id="loadBtn" style="padding: 10px 20px; background: #d0d0d0; border: 1px solid #999; border-radius: 4px; cursor: pointer;">Cargar</button>
+            </div>
+            <div id="status" class="status hidden"></div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchBox" placeholder="Buscar clases, métodos o propiedades..." />
+        </div>
+
+        <div class="content-area">
+            <div class="sidebar">
+                <h3>Clases encontradas</h3>
+                <ul class="class-list" id="classList"></ul>
+            </div>
+
+            <div class="main-content" id="mainContent">
+                <p style="text-align: center; color: #888; margin-top: 100px;">
+                    Ingresa el nombre del archivo .txt que está en la misma carpeta
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ClassAnalyzer {
+            constructor() {
+                this.classes = [];
+                this.currentFilter = '';
+                this.originalContent = '';
+                this.init();
+            }
+
+            init() {
+                document.getElementById('loadBtn').addEventListener('click', () => this.loadFromUrl());
+                document.getElementById('searchBox').addEventListener('input', (e) => this.handleSearch(e));
+                document.getElementById('fileUrl').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.loadFromUrl();
+                });
+
+                setTimeout(() => {
+                    this.loadFromUrl()
+                }, 1000);
+            }
+
+            async loadFromUrl() {
+                const fileName = document.getElementById('fileUrl').value.trim();
+                if (!fileName) {
+                    this.showStatus('Ingresa el nombre del archivo.');
+                    return;
+                }
+
+                const finalFileName = fileName.endsWith('.txt') ? fileName : fileName + '.txt';
+                
+                this.showStatus('Cargando archivo...');
+
+                try {
+                    const response = await fetch(`./a.gio`);
+                    if (!response.ok) {
+                        throw new Error(`Archivo no encontrado: ${finalFileName}`);
+                    }
+                    
+                    const content = await response.text();
+                    this.originalContent = content;
+                    console.log('Contenido cargado:', content.substring(0, 200) + '...');
+                    
+                    this.analyzeClasses(content);
+                    console.log('Clases encontradas:', this.classes.length);
+                    
+                    this.renderResults();
+                    this.showStatus(`Análisis completado. ${this.classes.length} clases encontradas.`);
+                } catch (error) {
+                    console.error('Error completo:', error);
+                    this.showStatus(`Error: ${error.message}`);
+                }
+            }
+
+            showStatus(message) {
+                const status = document.getElementById('status');
+                status.className = 'status';
+                status.textContent = message;
+            }
+
+            analyzeClasses(content) {
+                this.classes = [];
+                
+                const isPython = content.includes('def ') || content.includes('import ') || (content.includes('class ') && content.includes(':'));
+                
+                if (isPython) {
+                    this.analyzePythonClasses(content);
+                } else {
+                    this.analyzeJavaScriptClasses(content);
+                }
+
+                this.classes.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            analyzeJavaScriptClasses(content) {
+                let cleanContent = content.replace(/\/\*[\s\S]*?\*\//g, '');
+                const classRegex = /class\s+(\w+)\s*\{([\s\S]*?)(?=\n\s*class\s+|\n\s*\/\*|\n\s*$|$)/g;
+                let match;
+
+                while ((match = classRegex.exec(cleanContent)) !== null) {
+                    const className = match[1];
+                    let classBody = match[2];
+                    
+                    let braceCount = 0;
+                    let endIndex = 0;
+                    
+                    for (let i = 0; i < classBody.length; i++) {
+                        if (classBody[i] === '{') {
+                            braceCount++;
+                        } else if (classBody[i] === '}') {
+                            braceCount--;
+                            if (braceCount === -1) {
+                                endIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    classBody = classBody.substring(0, endIndex);
+                    
+                    const classInfo = {
+                        name: className,
+                        constructor: this.extractJSConstructor(classBody),
+                        methods: this.extractJSMethods(classBody),
+                        properties: this.extractJSProperties(classBody),
+                        fullCode: `class ${className} {${classBody}}`,
+                        language: 'JavaScript'
+                    };
+
+                    this.classes.push(classInfo);
+                }
+            }
+
+            analyzePythonClasses(content) {
+                const lines = content.split('\n');
+                let i = 0;
+                
+                while (i < lines.length) {
+                    const line = lines[i].trim();
+                    const classMatch = line.match(/^class\s+(\w+)(?:\([^)]*\))?:\s*/);
+                    
+                    if (classMatch) {
+                        const className = classMatch[1];
+                        const classStartLine = i;
+                        
+                        // Encontrar el final de la clase
+                        let j = i + 1;
+                        while (j < lines.length && (lines[j].trim() === '' || lines[j].startsWith('    ') || lines[j].startsWith('\t'))) {
+                            j++;
+                        }
+                        
+                        const classLines = lines.slice(classStartLine, j);
+                        const classBody = classLines.join('\n');
+                        
+                        const classInfo = {
+                            name: className,
+                            constructor: this.extractPythonInit(classBody, lines, classStartLine),
+                            methods: this.extractPythonMethods(classBody, lines, classStartLine),
+                            properties: this.extractPythonProperties(classBody),
+                            fullCode: classBody,
+                            language: 'Python'
+                        };
+
+                        this.classes.push(classInfo);
+                        i = j;
+                    } else {
+                        i++;
+                    }
+                }
+            }
+
+            extractPythonMethods(classBody, allLines, classStartIndex) {
+                const methods = [];
+                const lines = classBody.split('\n');
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const methodMatch = line.match(/^\s+def\s+(\w+)\s*\(([^)]*)\)\s*:/);
+                    
+                    if (methodMatch) {
+                        const methodName = methodMatch[1];
+                        const params = this.parsePythonParameters(methodMatch[2]);
+                        
+                        // Extraer el código completo del método
+                        const methodCode = this.extractPythonMethodCode(lines, i);
+                        
+                        methods.push({
+                            name: methodName,
+                            parameters: params,
+                            code: methodCode.trim()
+                        });
+                    }
+                }
+                
+                return methods;
+            }
+
+            extractPythonMethodCode(lines, startIndex) {
+                let methodCode = lines[startIndex] + '\n';
+                const baseIndent = lines[startIndex].match(/^(\s*)/)[1].length;
+                
+                let i = startIndex + 1;
+                while (i < lines.length) {
+                    const line = lines[i];
+                    const lineIndent = line.match(/^(\s*)/)[1].length;
+                    
+                    // Si encontramos una línea con menor indentación y no está vacía, terminamos
+                    if (line.trim() !== '' && lineIndent <= baseIndent) {
+                        break;
+                    }
+                    
+                    methodCode += line + '\n';
+                    i++;
+                }
+                
+                return methodCode;
+            }
+
+            extractPythonInit(classBody, allLines, classStartIndex) {
+                const initMatch = classBody.match(/^\s+def\s+__init__\s*\(([^)]*)\)\s*:([\s\S]*?)(?=^\s+def\s+\w+|^\s*$|$)/m);
+                
+                if (!initMatch) return null;
+
+                const params = this.parsePythonParameters(initMatch[1]);
+                
+                // Extraer el código completo del __init__
+                const lines = classBody.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].match(/^\s+def\s+__init__/)) {
+                        const methodCode = this.extractPythonMethodCode(lines, i);
+                        return {
+                            parameters: params,
+                            code: methodCode.trim()
+                        };
+                    }
+                }
+
+                return {
+                    parameters: params,
+                    code: initMatch[0].trim()
+                };
+            }
+
+            extractJSConstructor(classBody) {
+                const constructorRegex = /constructor\s*\(([^)]*)\)\s*{([^{}]*(?:{[^{}]*}[^{}]*)*)}/s;
+                const match = constructorRegex.exec(classBody);
+                
+                if (!match) return null;
+
+                const params = this.parseParameters(match[1]);
+                const body = match[2].trim();
+
+                return {
+                    parameters: params,
+                    body: body
+                };
+            }
+
+            extractJSMethods(classBody) {
+                const methods = [];
+                const methodRegex = /^\s*(\w+)\s*\([^)]*\)\s*[{=]/gm;
+                let match;
+
+                while ((match = methodRegex.exec(classBody)) !== null) {
+                    const methodName = match[1];
+                    if (methodName !== 'constructor' && methodName !== 'if' && methodName !== 'for' && methodName !== 'while') {
+                        const fullMatch = match[0];
+                        const paramMatch = fullMatch.match(/\(([^)]*)\)/);
+                        const params = paramMatch ? this.parseParameters(paramMatch[1]) : [];
+                        
+                        methods.push({
+                            name: methodName,
+                            parameters: params
+                        });
+                    }
+                }
+
+                return methods;
+            }
+
+            extractJSProperties(classBody) {
+                const properties = [];
+                const propertyRegex = /this\.(\w+)\s*=/g;
+                let match;
+                const found = new Set();
+
+                while ((match = propertyRegex.exec(classBody)) !== null) {
+                    const propName = match[1];
+                    if (!found.has(propName)) {
+                        properties.push({ name: propName });
+                        found.add(propName);
+                    }
+                }
+
+                return properties;
+            }
+
+            extractPythonProperties(classBody) {
+                const properties = [];
+                const propertyRegex = /self\.(\w+)\s*=/g;
+                let match;
+                const found = new Set();
+
+                while ((match = propertyRegex.exec(classBody)) !== null) {
+                    const propName = match[1];
+                    if (!found.has(propName)) {
+                        properties.push({ name: propName });
+                        found.add(propName);
+                    }
+                }
+
+                return properties;
+            }
+
+            parsePythonParameters(paramString) {
+                if (!paramString.trim()) return [];
+                
+                return paramString.split(',').map(param => {
+                    const parts = param.trim().split('=');
+                    const name = parts[0].trim();
+                    const defaultValue = parts[1] ? parts[1].trim() : null;
+                    
+                    return {
+                        name: name,
+                        defaultValue: defaultValue
+                    };
+                });
+            }
+
+            parseParameters(paramString) {
+                if (!paramString.trim()) return [];
+                
+                return paramString.split(',').map(param => {
+                    const parts = param.trim().split('=');
+                    const name = parts[0].trim();
+                    const defaultValue = parts[1] ? parts[1].trim() : null;
+                    
+                    return {
+                        name: name,
+                        defaultValue: defaultValue
+                    };
+                });
+            }
+
+            copyToClipboard(text, buttonElement) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = buttonElement.textContent;
+                    buttonElement.textContent = '¡Copiado!';
+                    buttonElement.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        buttonElement.textContent = originalText;
+                        buttonElement.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    alert('Error al copiar el código');
+                });
+            }
+
+            renderResults() {
+                this.renderSidebar();
+                this.renderMainContent();
+            }
+
+            renderSidebar() {
+                const classList = document.getElementById('classList');
+                classList.innerHTML = '';
+
+                this.getFilteredClasses().forEach((classInfo, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'class-item';
+                    li.innerHTML = `${classInfo.name} <span class="${classInfo.language === 'Python' ? 'python-indicator' : 'js-indicator'}">${classInfo.language === 'Python' ? 'PY' : 'JS'}</span>`;
+                    li.onclick = () => this.selectClass(index);
+                    if (index === 0) li.className += ' active';
+                    classList.appendChild(li);
+                });
+            }
+
+            renderMainContent() {
+                const mainContent = document.getElementById('mainContent');
+                const filteredClasses = this.getFilteredClasses();
+                
+                if (filteredClasses.length === 0) {
+                    mainContent.innerHTML = '<p style="text-align: center; color: #888; margin-top: 100px;">No se encontraron clases que coincidan con la búsqueda.</p>';
+                    return;
+                }
+
+                let html = '';
+                filteredClasses.forEach(classInfo => {
+                    html += this.renderClassSection(classInfo);
+                });
+
+                mainContent.innerHTML = html;
+                this.addCopyEventListeners();
+            }
+
+            addCopyEventListeners() {
+                document.querySelectorAll('.copy-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const code = e.target.getAttribute('data-code');
+                        this.copyToClipboard(code, e.target);
+                    });
+                });
+            }
+
+            renderClassSection(classInfo) {
+                const isPython = classInfo.language === 'Python';
+                let html = `
+                    <div class="class-section">
+                        <h2 class="class-title">${classInfo.name} <span class="${isPython ? 'python-indicator' : 'js-indicator'}">${isPython ? 'Python' : 'JavaScript'}</span></h2>
+                `;
+
+                // Constructor o __init__
+                if (classInfo.constructor) {
+                    const constructorName = isPython ? '__init__' : 'constructor';
+                    html += `
+                        <div class="section-title">${constructorName}</div>
+                        <div class="method-item">
+                            <div class="method-name">${constructorName}</div>
+                            <div class="parameters">
+                                Parámetros: ${this.formatParameters(classInfo.constructor.parameters)}
+                            </div>
+                    `;
+                    
+                    if (isPython && classInfo.constructor.code) {
+                        html += `
+                            <div class="code-section">
+                                <div class="code-header">
+                                    <span>Código del ${constructorName}</span>
+                                    <button class="copy-btn" data-code="${this.escapeHtml(classInfo.constructor.code)}">Copiar código</button>
+                                </div>
+                                <div class="code-block">${this.escapeHtml(classInfo.constructor.code)}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `</div>`;
+                }
+
+                // Propiedades
+                if (classInfo.properties.length > 0) {
+                    html += `<div class="section-title">Propiedades</div>`;
+                    classInfo.properties.forEach(prop => {
+                        html += `
+                            <div class="property-item">
+                                <div class="property-name">${prop.name}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Métodos
+                if (classInfo.methods.length > 0) {
+                    html += `<div class="section-title">Métodos</div>`;
+                    classInfo.methods.forEach(method => {
+                        html += `
+                            <div class="method-item">
+                                <div class="method-name">${method.name}</div>
+                                <div class="parameters">
+                                    Parámetros: ${this.formatParameters(method.parameters)}
+                                </div>
+                        `;
+                        
+                        if (isPython && method.code) {
+                            html += `
+                                <div class="code-section">
+                                    <div class="code-header">
+                                        <span>Código de ${method.name}()</span>
+                                        <button class="copy-btn" data-code="${this.escapeHtml(method.code)}">Copiar código</button>
+                                    </div>
+                                    <div class="code-block">${this.escapeHtml(method.code)}</div>
+                                </div>
+                            `;
+                        }
+                        
+                        html += `</div>`;
+                    });
+                }
+
+                // Ejemplo de uso
+                html += `
+                    <div class="example-section">
+                        <div class="section-title">Ejemplo de uso</div>
+                        <div class="code-section">
+                            <div class="code-header">
+                                <span>Ejemplo de uso de ${classInfo.name}</span>
+                                <button class="copy-btn" data-code="${this.escapeHtml(this.generateUsageExample(classInfo))}">Copiar ejemplo</button>
+                            </div>
+                            <div class="code-block">${this.escapeHtml(this.generateUsageExample(classInfo))}</div>
+                        </div>
+                    </div>
+                `;
+
+                html += `</div>`;
+                return html;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            formatParameters(params) {
+                if (!params || params.length === 0) return 'ninguno';
+                
+                return params.map(param => {
+                    let result = param.name;
+                    if (param.defaultValue) {
+                        result += ` = ${param.defaultValue}`;
+                    }
+                    return result;
+                }).join(', ');
+            }
+
+            generateUsageExample(classInfo) {
+                const isPython = classInfo.language === 'Python';
+                let example = `# Ejemplo de uso de la clase ${classInfo.name}\n\n`;
+                
+                if (isPython) {
+                    if (classInfo.constructor) {
+                        const params = classInfo.constructor.parameters;
+                        let paramValues = [];
+                        
+                        params.forEach(param => {
+                            if (param.name === 'self') return;
+                            
+                            if (param.defaultValue) {
+                                paramValues.push(param.defaultValue);
+                            } else if (param.name.includes('id') || param.name.includes('Id')) {
+                                paramValues.push('"mi_elemento"');
+                            } else if (param.name.includes('text') || param.name.includes('Text')) {
+                                paramValues.push('"Texto de ejemplo"');
+                            } else {
+                                paramValues.push('"valor"');
+                            }
+                        });
+
+                        example += `mi_${classInfo.name.toLowerCase()} = ${classInfo.name}(${paramValues.join(', ')})\n\n`;
+                    } else {
+                        example += `mi_${classInfo.name.toLowerCase()} = ${classInfo.name}()\n\n`;
+                    }
+
+                    classInfo.methods.slice(0, 3).forEach(method => {
+                        if (method.name !== '__init__' && !method.name.startsWith('_')) {
+                            example += `mi_${classInfo.name.toLowerCase()}.${method.name}()\n`;
+                        }
+                    });
+
+                } else {
+                    if (classInfo.constructor) {
+                        const params = classInfo.constructor.parameters;
+                        let paramValues = [];
+                        
+                        params.forEach(param => {
+                            if (param.name.includes('Element')) {
+                                paramValues.push('document.getElementById("container")');
+                            } else if (param.name.includes('id') || param.name.includes('Id')) {
+                                paramValues.push('"mi-elemento"');
+                            } else if (param.name.includes('text') || param.name.includes('Text')) {
+                                paramValues.push('"Texto de ejemplo"');
+                            } else if (param.name.includes('events')) {
+                                paramValues.push('{ click: () => console.log("clicked") }');
+                            } else if (param.defaultValue) {
+                                paramValues.push(param.defaultValue);
+                            } else {
+                                paramValues.push('"valor"');
+                            }
+                        });
+
+                        example += `const mi${classInfo.name} = new ${classInfo.name}(${paramValues.join(', ')});\n\n`;
+                    } else {
+                        example += `const mi${classInfo.name} = new ${classInfo.name}();\n\n`;
+                    }
+
+                    classInfo.methods.slice(0, 3).forEach(method => {
+                        if (method.name !== 'init' && method.name !== 'createElement') {
+                            example += `mi${classInfo.name}.${method.name}();\n`;
+                        }
+                    });
+                }
+
+                return example;
+            }
+
+            selectClass(index) {
+                const items = document.querySelectorAll('.class-item');
+                items.forEach(item => item.classList.remove('active'));
+                items[index].classList.add('active');
+
+                const classInfo = this.getFilteredClasses()[index];
+                const mainContent = document.getElementById('mainContent');
+                mainContent.innerHTML = this.renderClassSection(classInfo);
+                this.addCopyEventListeners();
+            }
+
+            handleSearch(event) {
+                this.currentFilter = event.target.value.toLowerCase();
+                this.renderResults();
+            }
+
+            getFilteredClasses() {
+                if (!this.currentFilter) return this.classes;
+                
+                return this.classes.filter(classInfo => {
+                    return classInfo.name.toLowerCase().includes(this.currentFilter) ||
+                           classInfo.methods.some(method => method.name.toLowerCase().includes(this.currentFilter)) ||
+                           classInfo.properties.some(prop => prop.name.toLowerCase().includes(this.currentFilter));
+                });
+            }
+        }
+
+        new ClassAnalyzer();
+    </script>
+</body>
