@@ -254,11 +254,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Documentador Automático de Clases JavaScript/Python</h1>
-            <div class="upload-area">
+            <h1>blender api</h1>
+            <!-- <div class="upload-area">
                 <input type="text" id="fileUrl" placeholder="Nombre del archivo .txt (ej: a.txt)" value="" style="width: 70%; padding: 10px; margin-right: 10px; border: 1px solid #999; border-radius: 4px;">
                 <button id="loadBtn" style="padding: 10px 20px; background: #d0d0d0; border: 1px solid #999; border-radius: 4px; cursor: pointer;">Cargar</button>
-            </div>
+            </div> -->
             <div id="status" class="status hidden"></div>
         </div>
 
@@ -290,11 +290,11 @@
             }
 
             init() {
-                document.getElementById('loadBtn').addEventListener('click', () => this.loadFromUrl());
+             /*    document.getElementById('loadBtn').addEventListener('click', () => this.loadFromUrl());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.handleSearch(e));
                 document.getElementById('fileUrl').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') this.loadFromUrl();
-                });
+                }); */
 
                 setTimeout(() => {
                     this.loadFromUrl()
@@ -302,15 +302,8 @@
             }
 
             async loadFromUrl() {
-                const fileName = document.getElementById('fileUrl').value.trim();
-                if (!fileName) {
-                    this.showStatus('Ingresa el nombre del archivo.');
-                    return;
-                }
-
-                const finalFileName = fileName.endsWith('.txt') ? fileName : fileName + '.txt';
-                
-                this.showStatus('Cargando archivo...');
+              
+               
 
                 try {
                     const response = await fetch(`https://unonibes4a.github.io/apiBlender/a.gio`);
