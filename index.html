@@ -2,604 +2,425 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-   
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
- 
-::-webkit-scrollbar {
-  width: 10px;
-}
-
- 
-::-webkit-scrollbar-track {
-  background: #f1f1f1; 
-}
- 
- 
-::-webkit-scrollbar-thumb {
-  background: #888; 
-}
-
- 
-::-webkit-scrollbar-thumb:hover {
-  background: #555; 
-}
-</style>
-    <title>API Viewer</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador de Código Python</title>
     <style>
-        * {
- 
-}
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap');
+
+        :root {
+            --bg:       #1a1d23;
+            --surface:  #21252b;
+            --card:     #282c34;
+            --border:   #3a404d;
+            --accent:   #61afef;
+            --green:    #98c379;
+            --red:      #e06c75;
+            --muted:    #5c6370;
+            --text:     #abb2bf;
+            --text-dim: #6b7280;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: rgb(255, 255, 255);
-            background: linear-gradient(90deg, rgb(167, 167, 167) 0%, rgba(250,250,250,0.5130427170868348) 37%);
-          
-            
-}
-body *{
-    cursor: url('./a.png'), auto;
-}
+            font-family: 'Syne', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 32px 20px;
+        }
 
-.container {
-    position: absolute;
-    top: 0%;
-    left: 10%;
-     width: 100%;
-    min-width: 250px;
-    max-width: 900px;
-    margin: auto;
-    background: white;
-    padding: 20px;
- 
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
 
-    overflow: scroll;
-    cursor: url('./a.png'), auto;
+        /* ── Header ── */
+        header {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        header h1 {
+            font-size: 1.9em;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+        header span {
+            font-size: 0.85em;
+            color: var(--muted);
+            font-weight: 400;
+        }
 
- 
-}
+        /* ── Search bar ── */
+        .search-wrap {
+            position: relative;
+            margin-bottom: 28px;
+        }
+        .search-wrap svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            pointer-events: none;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 13px 14px 13px 42px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.92em;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #searchInput::placeholder { color: var(--muted); }
+        #searchInput:focus { border-color: var(--accent); }
 
-h1 {
-    text-align: center;
-    background-color: #ffffff;
-    color: #a6c6e7;
-}
+        /* ── Stats bar ── */
+        #statsBar {
+            font-size: 0.8em;
+            color: var(--text-dim);
+            margin-bottom: 18px;
+            min-height: 18px;
+        }
+        #statsBar b { color: var(--accent); }
 
- 
+        /* ── Code list ── */
+        .code-list {
+            display: grid;
+            gap: 16px;
+        }
 
-.class-item {
-    background: #ddd;
-    padding: 10px;
-    margin: 5px 0;
-    cursor: pointer;
-    border-radius: 5px;
-    cursor: url('./a.png'), auto;
-}
+        .code-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .code-item:hover { border-color: var(--accent); }
 
-.method-list {
-    margin-left: 15px;
-}
-button{
-    cursor: url('./a.png'), auto;   
-}
-a{
-    cursor: url('./a.png'), auto;
-}
-.method-item {
-    background: #eee;
-    padding: 8px;
-    margin: 3px 0;
-    cursor: pointer;
-    border-radius: 5px;
- 
-    cursor: url('./a.png'), auto;
-}
+        /* ── Item header ── */
+        .item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px 12px;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+        }
+        .fn-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--green);
+            word-break: break-all;
+        }
+        .fn-name .kw {
+            color: var(--accent);
+            font-weight: 400;
+            margin-right: 4px;
+        }
+        .fn-args {
+            font-size: 0.8em;
+            color: var(--muted);
+            font-weight: 400;
+        }
 
-.method-item:hover{
-    background: #79766a83;
-}
+        .copy-button {
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid var(--muted);
+            color: var(--muted);
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.78em;
+            font-family: 'Syne', sans-serif;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .copy-button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .copy-button.copied {
+            border-color: var(--green);
+            color: var(--green);
+        }
 
-.popup {
-    display: none;
-    position: fixed;
-    top: 37%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-}
+        /* ── Code display ── */
+        .code-display {
+            background: var(--surface);
+            padding: 16px 18px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84em;
+            line-height: 1.55;
+            white-space: pre;
+            max-height: 320px;
+            color: #c8cdd5;
+        }
 
-.popup-content {
-    text-align: center;
-}
+        /* ── No results ── */
+        .no-results {
+            text-align: center;
+            color: var(--red);
+            padding: 50px 20px;
+            font-size: 1.1em;
+        }
+        .no-results small { display: block; color: var(--muted); margin-top: 6px; font-size: 0.8em; }
 
-pre {
-    background: #f8f8f8;
-    padding: 10px;
-    border: 1px solid #ccc;
-    text-align: left;
-    max-height: 200px;
-    overflow: auto;
-}
-
-button {
-    padding: 8px 12px;
-    margin: 5px;
-    border: none;
-    background: #007BFF;
-    color: white;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-button:hover {
-    background: #0056b3;
-}
-
-.css-input {
-     padding: 5px;
-     font-size: 22px;
-     border-width: 20px;
-     border-color: #CCCCCC;
-     background-color: #FFFFFF;
-     color: #000000;
-     border-style: solid;
-     border-radius: 0px;
-     box-shadow: 0px 0px 9px rgba(66,66,66,.75);
-     text-shadow: 0px 0px 20px rgba(66,66,66,.100);
-}
- .css-input:focus {
-     outline:none;
-}
-.clh4{
-    
- color: #0000002d;
-}
-#idbarra{
-    position: fixed;
-    top:0% ;
-    right: 0%;
-    width: 10%;
-    max-width: 150px;
-    height: 100%;
-    background: rgb(255,255,255);
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.26) 0%, rgba(251, 254, 255, 0.185) 93%);
-    z-index: -1;
-}
-
-#idComentarios{
-    position: absolute;
-    bottom:  -150px;
-    left:   0%;
-  width: 100% ;
- min-height: 150px;
-  border: 1px solid #b1b1b1;
-  background-color: hsla(0, 0%, 0%, 0.31);
-  overflow-y: scroll;
-  display: flex;
-	flex-direction: column;
-	flex-wrap: wrap;
-	justify-content: flex-start;
-	align-items: stretch;
-	align-content: stretch;
-    z-index: -6;
- 
-}
-#idcom{
-    width: 80%;
-    height: 90%;
- 
-    color: #000000;
-
-    text-align: left;
-    font-size: 17px;
- 
-
-}
-
-#idimg{
-    position: fixed;
-    top: 0%;
-    right: 0%;
-    z-index: -1;
-}
-.indpclas{
-    display:flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    width: 200px;
-    height: auto;
-}
-
-.clw{
-    width: 100%;
-    height: 100%;
-}
-#idpinfo{
-    margin-top: 20px;
-}
-
+        /* ── Error ── */
+        .error-msg {
+            background: rgba(224,108,117,0.1);
+            border: 1px solid var(--red);
+            border-radius: 8px;
+            padding: 20px;
+            color: var(--red);
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
+<div class="container">
+    <header>
+        <h1>Python Explorer</h1>
+        <span id="fnCount">cargando…</span>
+    </header>
 
-    <img id="idimg" src="./bl.png" alt="">
-    <div id="idbarra"></div>
-
-    <div class="container">
-        <h1> API de blender  avanzado </h1>
-        <h4 class="clh4">Desarollador giovanni rodriguez diaz</h4>
-        <input type="text" id="search" class="css-input " placeholder="Buscar clases o métodos...">
-        <p id="content"></p>
+    <div class="search-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+             viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="searchInput"
+               placeholder="ej: global position  ·  establecer mesh  ·  getActive  ·  bsdf nodes">
     </div>
 
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <h3 id="popup-title"></h3>
-            <pre id="popup-code"></pre>
-            <button id="copy-btn">Copiar</button>
-            <button onclick="GioApp.closePopup()">Cerrar</button>
-            <div id="idComentarios">
-                <div id="idcom">
+    <div id="statsBar"></div>
+    <div class="code-list" id="codeList"></div>
+</div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const codeListEl  = document.getElementById('codeList');
+    const searchInput = document.getElementById('searchInput');
+    const statsBar    = document.getElementById('statsBar');
+    const fnCount     = document.getElementById('fnCount');
 
-                </div>
+    let allFunctions = [];
 
+    // ─────────────────────────────────────────────────────────────
+    //  NORMALIZE  –  convierte snake_case y camelCase a palabras
+    //  separadas por espacio, todo en minúsculas.
+    //
+    //  "establecer_mesh_activo" → "establecer mesh activo"
+    //  "getGlobalPosition"      → "get global position"
+    //  "BSDF_Nodes"             → "bsdf nodes"
+    // ─────────────────────────────────────────────────────────────
+    function normalize(str) {
+        return str
+            // 1) camelCase / PascalCase → insertar espacio antes de mayúscula
+            //    que va después de minúscula, o antes de mayúscula seguida de minúscula
+            .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+            .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+            // 2) guiones bajos, guiones, puntos → espacio
+            .replace(/[_\-\.]+/g, ' ')
+            // 3) todo a minúsculas y colapsar espacios múltiples
+            .toLowerCase()
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
 
-            </div>
-        </div>
-       
-    </div>
+    // ─────────────────────────────────────────────────────────────
+    //  PARSER  –  line-by-line, indentation-aware
+    // ─────────────────────────────────────────────────────────────
+    function parsePython(src) {
+        const lines   = src.split('\n');
+        const results = [];
+        const total   = lines.length;
+        let i = 0;
 
-    <div class="class-item" id="idpinfo">
-       <div class="clw">
-        <div id="contendidopy"><pre class="codigo-python">import bpy
- 
-            import time
-            # Variables globales
-            global_vars = {
-            "selected_object_1": None,
-            "selected_object_2": None,
-            "slider_int_value": 5,
-            "slider_float_value": 0.5,
-            "checkbox_1": False,
-            "checkbox_2": True,
-            "dropdown_value": "Option1",
-            "input_text": "Default Text"
-            }
-            # Actualización de variables globales
-            def update_slider_int(self, context):
-                global_vars["slider_int_value"] = self.slider_int_value
-            def update_slider_float(self, context):
-                global_vars["slider_float_value"] = self.slider_float_value
-            def update_checkbox_1(self, context):
-                global_vars["checkbox_1"] = self.checkbox_1
-            def update_checkbox_2(self, context):
-                global_vars["checkbox_2"] = self.checkbox_2
-            def update_dropdown(self, context):
-                global_vars["dropdown_value"] = self.dropdown_value
-            def update_input_text(self, context):
-                global_vars["input_text"] = self.input_text
-            # Definir propiedades
-            bpy.types.Scene.slider_int_value = bpy.props.IntProperty(
-            name="Int Slider",
-            default=5,
-            min=0,
-            max=10,
-            update=update_slider_int
-            )
-            bpy.types.Scene.slider_float_value = bpy.props.FloatProperty(
-            name="Float Slider",
-            default=0.5,
-            min=0.0,
-            max=1.0,
-            update=update_slider_float
-            )
-            bpy.types.Scene.checkbox_1 = bpy.props.BoolProperty(
-            name="Checkbox 1",
-            default=False,
-            update=update_checkbox_1
-            )
-            bpy.types.Scene.checkbox_2 = bpy.props.BoolProperty(
-            name="Checkbox 2",
-            default=True,
-            update=update_checkbox_2
-            )
-            bpy.types.Scene.dropdown_value = bpy.props.EnumProperty(
-            name="Dropdown",
-            items=[
-            ("Option1", "Option 1", "First option"),
-            ("Option2", "Option 2", "Second option"),
-            ("Option3", "Option 3", "Third option")
-            ],
-            update=update_dropdown
-            )
-            bpy.types.Scene.input_text = bpy.props.StringProperty(
-            name="Input Text",
-            default="Default Text",
-            update=update_input_text
-            )
-            # Definir la clase del panel
-            class AdvancedPanel(bpy.types.Panel):
-                bl_label = "Advanced Panel"
-                bl_idname = "OBJECT_PT_advanced_panel"
-                bl_space_type = 'VIEW_3D'
-                bl_region_type = 'UI'
-                bl_category = 'Tool'
-                bl_context = "objectmode"
-                bl_options = {'DEFAULT_CLOSED'}
-                def draw(self, context):
-                    layout = self.layout
-                    scene = context.scene
-                    # DataPickers (Goteros)
-                    row = layout.row()
-                    row.label(text="DataPicker 1:")
-                    row.prop(context.scene, "selected_object_1", text="")
-                    row = layout.row()
-                    row.label(text="DataPicker 2:")
-                    row.prop(context.scene, "selected_object_2", text="")
-                    # Sliders
-                    layout.label(text="Sliders:")
-                    layout.prop(scene, "slider_int_value", slider=True)
-                    layout.prop(scene, "slider_float_value", slider=True)
-                    # Checkboxes
-                    layout.label(text="Checkboxes:")
-                    layout.prop(scene, "checkbox_1")
-                    layout.prop(scene, "checkbox_2")
-                    # Dropdown (Selector de opciones)
-                    layout.label(text="Dropdown:")
-                    layout.prop(scene, "dropdown_value", text="")
-                    # Input Text
-                    layout.label(text="Input Text:")
-                    layout.prop(scene, "input_text", text="")
-                    drawbotons(self, context)
-            # Registrar y desregistrar clases
-            
-            
-            def drawbotons(self, context):
-                    layout = self.layout
-                    row = layout.row()
-                    row.operator("custom.button1")
-                    row.operator("custom.button2")
-            class Button1Operator(bpy.types.Operator):
-                bl_idname = "custom.button1"
-                bl_label = "Botón 1"
-            
-                def execute(self, context):
-                    print("Botón 1 presionado")
-                    self.report({'INFO'}, "Botón 1 presionado")
-                    
-                    return {'FINISHED'}
-            
-            class Button2Operator(bpy.types.Operator):
-                bl_idname = "custom.button2"
-                bl_label = "Botón 2"
-            
-                def execute(self, context):
-                    print("Botón 2 presionado")
-                    self.report({'INFO'}, "Botón 2 presionado")
-                    return {'FINISHED'}
-            #
-            classes = [
-                AdvancedPanel,
-                Button1Operator,
-                Button2Operator
-            ]
-            
-             
-                 
-            def register():  
-                for cls in classes:
-                    bpy.utils.register_class(cls)
-                bpy.types.Scene.selected_object_1 = bpy.props.PointerProperty(type=bpy.types.Object)
-                bpy.types.Scene.selected_object_2 = bpy.props.PointerProperty(type=bpy.types.Object)
-            def unregister():
-                for cls in reversed(classes):
-                    bpy.utils.unregister_class(cls)
-                del bpy.types.Scene.selected_object_1
-                del bpy.types.Scene.selected_object_2
-                
-                
-            if __name__ == "__main__":
-                register()</pre></div>
-    
-    
-    </div> 
-    </div>
+        const DEF_RE = /^(\s*)def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(\([\s\S]*?\))\s*(?:->\s*.+?)?\s*:\s*(?:#.*)?$/;
 
-    <script>
+        while (i < total) {
+            const m = DEF_RE.exec(lines[i]);
+            if (m) {
+                const baseIndent = m[1].length;
+                const funcName   = m[2];
+                const funcArgs   = m[3];
+                const start      = i;
 
+                i++;
 
-class GioApp{
+                while (i < total) {
+                    const line    = lines[i];
+                    const trimmed = line.trimEnd();
 
- static apiData =null;
- static texodeunico=null;
-  static  parsePythonCode=(code)=> {
-    let lines = code.split('\n');
-    let apiData = {};
-    let currentClass = null;
-    let classCode = [];
-    let methodCode = {};
-    
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
+                    if (trimmed === '') { i++; continue; }
 
-        let classMatch = line.match(/^class\s+(\w+)/);
-        if (classMatch) {
-            currentClass = classMatch[1];
-            apiData[currentClass] = { methods: {}, fullCode: '' };
-            classCode = [line];
-            methodCode = {};
-        } 
-        
-        if (currentClass) {
-            classCode.push(line);
+                    const lineIndent = line.length - line.trimStart().length;
+                    if (lineIndent <= baseIndent) break;
+                    i++;
+                }
 
-            let methodMatch = line.match(/^\s*def\s+(\w+)\s*\(/);
-            if (methodMatch) {
-                let methodName = methodMatch[1];
-                methodCode[methodName] = [line];
-            } 
-            
-            else if (Object.keys(methodCode).length > 0) {
-                let lastMethod = Object.keys(methodCode).pop();
-                methodCode[lastMethod].push(line);
+                let end = i;
+                while (end > start + 1 && lines[end - 1].trim() === '') end--;
+
+                const fullCode = lines.slice(start, end).join('\n');
+
+                // searchIn: versión normalizada del nombre + args + código completo
+                const raw      = funcName + ' ' + funcArgs + ' ' + fullCode;
+                const searchIn = normalize(raw);
+
+                results.push({ name: funcName, args: funcArgs, code: fullCode, searchIn });
+            } else {
+                i++;
             }
         }
+        return results;
+    }
 
-        if (currentClass) {
-            apiData[currentClass].fullCode = classCode.join('\n');
-            apiData[currentClass].methods = methodCode;
+    // ─────────────────────────────────────────────────────────────
+    //  RENDER
+    // ─────────────────────────────────────────────────────────────
+    function render(list) {
+        codeListEl.innerHTML = '';
+
+        if (list.length === 0) {
+            codeListEl.innerHTML = `
+                <div class="no-results">
+                    Sin resultados
+                    <small>Prueba con otro término o comprueba la ortografía</small>
+                </div>`;
+            return;
         }
-    }
- 
 
- 
-    return apiData;
-}
+        const frag = document.createDocumentFragment();
 
-static   extraerComentariosPython=(texto) =>{
-    const regex = /\"\"\"[\s\S]*?\"\"\"/g;
-    const comentarios = texto.match(regex);
+        list.forEach(fn => {
+            const item = document.createElement('div');
+            item.className = 'code-item';
 
-    if (!comentarios) return "";
+            const header = document.createElement('div');
+            header.className = 'item-header';
 
-    return comentarios.join("\n\n");
-}
+            const nameEl = document.createElement('div');
+            nameEl.className = 'fn-name';
+            nameEl.innerHTML =
+                `<span class="kw">def </span>${escHtml(fn.name)}`
+                + `<span class="fn-args">${escHtml(fn.args)}</span>`;
 
+            const btn = document.createElement('button');
+            btn.className = 'copy-button';
+            btn.textContent = 'Copiar';
+            btn.onclick = () => copyCode(fn.code, btn);
 
-static limpiarContenido=(elementId="content") =>{
-    let elemento = document.getElementById(elementId);
-    if (elemento) {
-        elemento.innerHTML = "";
-    }
-}
-static ini=()=>{
-    GioApp. limpiarContenido( "content");
-    GioApp. apiData  = GioApp. parsePythonCode( GioApp.texodeunico);
-      GioApp. renderClassesList( GioApp.apiData);
-      GioApp.  setupSearch( GioApp.apiData);
-}
+            header.appendChild(nameEl);
+            header.appendChild(btn);
 
+            const pre = document.createElement('pre');
+            pre.className = 'code-display';
+            pre.textContent = fn.code;
 
-
-static renderClassesList=(apiData)=> {
-    let content = document.getElementById("content");
-    content.innerHTML = "";
-
-    Object.keys(apiData).forEach(className => {
-        let classDiv = document.createElement("div");
-        classDiv.classList.add("class-item");
-        classDiv.innerHTML = `<strong>${className}</strong>`;
-        classDiv.onclick = () =>{
-             GioApp. showPopup(className, apiData[className].fullCode); 
-              
-    }
-
-        let methodList = document.createElement("div");
-        methodList.classList.add("method-list");
-
-        Object.keys(apiData[className].methods).forEach(methodName => {
-            let methodDiv = document.createElement("div");
-            methodDiv.classList.add("method-item");
-            methodDiv.innerHTML = methodName;
-            methodDiv.onclick = (e) => {
-                e.stopPropagation();
-               GioApp. showPopup(methodName, apiData[className].methods[methodName].join('\n'),className);
-            };
-            methodList.appendChild(methodDiv);
+            item.appendChild(header);
+            item.appendChild(pre);
+            frag.appendChild(item);
         });
 
-        classDiv.appendChild(methodList);
-        content.appendChild(classDiv);
-    });
-}
-
-
-  
-
-static showPopup=(title, code,className) =>{
-
-   
-    let popup = document.getElementById("popup");
-    let popupTitle = document.getElementById("popup-title");
-    let popupCode = document.getElementById("popup-code");
-    let copyBtn = document.getElementById("copy-btn");
-
-    popupTitle.innerText = title;
-    popupCode.innerText = code;
-    copyBtn.onclick = () => GioApp. copyToClipboard(code);
-
-    popup.style.display = "block";
-
-    document.getElementById("idcom").textContent=   GioApp. extraerComentariosPython(GioApp. apiData[className].methods[title].toString());
-}
-
-static closePopup=() =>{
-    document.getElementById("popup").style.display = "none";
-}
-
-static copyToClipboard=(text)=> {
-    navigator.clipboard.writeText(text).then(() => alert("Copiado al portapapeles"));
-}
-
-static setupSearch=(apiData)=> {
-    let searchInput = document.getElementById("search");
-   
- 
-
-    searchInput.oninput= () => {
-        let query = searchInput.value.toLowerCase();
-        let content = document.getElementById("content");
-       // content.innerHTML = "";
-if(searchInput.value==""){
-    GioApp. ini();
-
-}
-else{
-    Object.keys(apiData).forEach(className => {
-            if (className.toLowerCase().includes(query) ||
-                Object.keys(apiData[className].methods).some(method => method.toLowerCase().includes(query))) {
-                    GioApp.renderClassesList({ [className]: apiData[className] });
-            }
-        });  
-}
-         
+        codeListEl.appendChild(frag);
     }
-  
-}
 
+    // ─────────────────────────────────────────────────────────────
+    //  FILTER  –  normaliza el input y busca todas las palabras
+    // ─────────────────────────────────────────────────────────────
+    function filter() {
+        // Normalizar lo que escribe el usuario de la misma forma
+        const normalized = normalize(searchInput.value);
+        const tokens     = normalized.split(' ').filter(Boolean);
 
-}
-         
+        const filtered = (tokens.length === 0
+            ? allFunctions
+            : allFunctions.filter(fn =>
+                // cada token debe aparecer en el searchIn normalizado
+                tokens.every(tok => fn.searchIn.includes(tok))
+              )
+        ).slice().sort((a, b) => a.name.localeCompare(b.name));
 
+        render(filtered);
 
-document.addEventListener("DOMContentLoaded", () => {
-    fetch('a.gio')
-        .then(response => response.text())
-        .then(text => {
-            GioApp. texodeunico=text;
-           GioApp. ini()
+        if (tokens.length > 0) {
+            statsBar.innerHTML =
+                `Mostrando <b>${filtered.length}</b> de <b>${allFunctions.length}</b> funciones`;
+        } else {
+            statsBar.innerHTML = '';
+        }
+    }
 
-           setTimeout(() => {
-            addinfop();
-           }, 0);
-        })
-        .catch(error => console.error('Error cargando a.gio:', error));
+    // ─────────────────────────────────────────────────────────────
+    //  LOAD
+    // ─────────────────────────────────────────────────────────────
+    async function load() {
+        try {
+            const res = await fetch('./codigo.txt');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const src = await res.text();
+            allFunctions = parsePython(src);
+            allFunctions.sort((a, b) => a.name.localeCompare(b.name));
+            fnCount.textContent = `${allFunctions.length} funciones`;
+            render(allFunctions);
+        } catch (err) {
+            fnCount.textContent = 'error';
+            codeListEl.innerHTML = `
+                <div class="error-msg">
+                    <b>No se pudo cargar codigo.txt</b><br><br>
+                    ${escHtml(err.message)}<br><br>
+                    Asegúrate de colocar <code>codigo.txt</code> en la misma carpeta
+                    que este HTML y abrirlo desde un servidor web (no con
+                    <code>file://</code>).
+                </div>`;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  HELPERS
+    // ─────────────────────────────────────────────────────────────
+    async function copyCode(code, btn) {
+        try {
+            await navigator.clipboard.writeText(code);
+            btn.textContent = '✓ Copiado';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = 'Copiar';
+                btn.classList.remove('copied');
+            }, 2000);
+        } catch {
+            alert('No se pudo copiar al portapapeles.');
+        }
+    }
+
+    function escHtml(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  INIT
+    // ─────────────────────────────────────────────────────────────
+    load();
+    searchInput.addEventListener('input', filter);
 });
-
-
- 
-
-  
-
- function addinfop(){
-    document.getElementById("content").appendChild(document.getElementById("idpinfo"));
- }
-
-    </script>
+</script>
 </body>
 </html>
