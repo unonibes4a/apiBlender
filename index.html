@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ─────────────────────────────────────────────────────────────
     async function load() {
         try {
-            const res = await fetch('./codigo.txt');
+            const res = await fetch('./a.gio');
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const src = await res.text();
             allFunctions = parsePython(src);
