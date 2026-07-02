@@ -1,129 +1,110 @@
 import bpy
 import bmesh
-from mathutils import Vector
+import math
+import random
+from mathutils import Vector, Matrix, Euler
 
 
-import bpy
-import bpy
-import bmesh
-from mathutils import Vector, Matrix
-
-import bpy
-import mathutils
+def obtener_nombres_seleccionados():
+    return [obj.name for obj in bpy.context.selected_objects]
 
 
+def seleccionar_objeto_por_nombre(nombre_objeto):
+    for obj in bpy.context.view_layer.objects:
+        obj.select_set(False)
+
+    objeto = bpy.data.objects.get(nombre_objeto)
+
+    if objeto:
+        try:
+            objeto.select_set(True)
+            bpy.context.view_layer.objects.active = objeto
+            return objeto
+        except RuntimeError:
+            return None
+    return None
 
 
-def elementGetCentroGlobal(element, matrix_world):
-    """
-    Centro global de un BMVert / BMEdge / BMFace.
+def crearRocasGio():
+    nombres = obtener_nombres_seleccionados()
 
-    Parametros
-    ----------
-    element      : BMVert | BMEdge | BMFace
-    matrix_world : Matrix  —  obj.matrix_world del mesh al que pertenece
-
-    Retorna
-    -------
-    Vector  —  posicion en espacio global
-    """
-    if hasattr(element, 'co'):                                # BMVert
-        return matrix_world @ element.co
-    avg = sum((v.co for v in element.verts), Vector()) / len(element.verts)
-    return matrix_world @ avg                                 # BMEdge / BMFace
+    for nombre in nombres:
+        obj = seleccionar_objeto_por_nombre(nombre)
 
 
-def objectoClonarYColocar(
-    source,
-    pos1,
-    pos2,
-    scale_x=False,
-    scale_y=False,
-    scale_z=True,
-    align_axis="Z",
-):
-    """
-    Duplica 'source', escala los ejes indicados a la distancia |pos2-pos1|,
-    posiciona el clon en pos1 y alinea su eje local a la direccion pos2-pos1.
-
-    Parametros
-    ----------
-    source     : bpy.types.Object  —  objeto a duplicar (debe ser MESH)
-    pos1       : Vector            —  posicion global donde se coloca el clon
-    pos2       : Vector            —  punto global que define la direccion
-    scale_x    : bool              —  escalar eje X local a la distancia
-    scale_y    : bool              —  escalar eje Y local a la distancia
-    scale_z    : bool              —  escalar eje Z local a la distancia (default True)
-    align_axis : str               —  eje local que apunta hacia pos2 ('X','Y','Z')
-
-    Retorna
-    -------
-    bpy.types.Object | None  —  el clon, o None si la distancia es cero o fallo el duplicado
-    """
-    direccion = pos2 - pos1
-    distancia = direccion.length
-    if distancia < 1e-6:
-        return None
-
-    clone = objectoDuplicarObjeto(source)
-    if clone is None:
-        return None
-
-    clone.name = source.name + "_clone"
-
-    # 1. escalar (transform_apply incluido dentro de objectoSetDimencion)
-    if scale_x:
-        objectoSetDimencion(clone, distancia, "X")
-    if scale_y:
-        objectoSetDimencion(clone, distancia, "Y")
-    if scale_z:
-        objectoSetDimencion(clone, distancia, "Z")
-
-    # 2. posicionar
-    objectoSetGlobalPostion(clone, pos1.x, pos1.y, pos1.z)
-
-    # 3. orientar
-    objectoalinearEjeADireccion(clone, direccion, align_axis)
-
-    return clone
-
-
-def meshGetEdgesSeleccionadasGlobal(obj):
-    """
-    Devuelve los pares de posiciones globales (pos_v0, pos_v1) de cada
-    edge seleccionada del objeto en Edit Mode.
-
-    Parametros
-    ----------
-    obj : bpy.types.Object  —  objeto en modo EDIT con edges seleccionadas
-
-    Retorna
-    -------
-    list[ tuple[Vector, Vector] ]
-        Cada tupla es (inicio_global, fin_global) de una edge seleccionada.
-        Lista vacia si no hay edges seleccionadas o el objeto no es valido.
-    """
-    if not obj or obj.type != 'MESH' or obj.mode != 'EDIT':
-        return []
-    bm = bmesh.from_edit_mesh(obj.data)
-    bm.edges.ensure_lookup_table()
-    mw = obj.matrix_world
-    resultado = []
-    for edge in bm.edges:
-        if edge.select:
-            p1 = mw @ edge.verts[0].co
-            p2 = mw @ edge.verts[1].co
-            resultado.append((p1, p2))
-    bmesh.update_edit_mesh(obj.data)
-    bm.free()
-    return resultado
-
-
+def ramdonsNUMb():
+    return random.uniform(0.1, 1.0)
 
 
 def contextoModo():
     return bpy.context.mode
 
+
+def contextoGetModoSeleccion(context):
+    vert, edge, face = context.tool_settings.mesh_select_mode
+    if face:
+        return 'FACE'
+    if edge:
+        return 'EDGE'
+    if vert:
+        return 'VERT'
+    return None
+
+
+def objectoModoDeSeleccion(context):
+    return context.tool_settings.mesh_select_mode[:]
+
+
+def bmeshGetElementoActivo(bm):
+    active = bm.select_history.active
+    if active is not None:
+        return active
+    for f in bm.faces:
+        if f.select:
+            return f
+    for e in bm.edges:
+        if e.select:
+            return e
+    for v in bm.verts:
+        if v.select:
+            return v
+    return None
+
+
+def objectoGetActivoYOtros(context):
+    active_obj = context.active_object
+    otros = [obj for obj in context.selected_objects if obj != active_obj]
+    return active_obj, otros
+
+
+def mallaGetElementosSeleccionados(bm, modo):
+    if modo == 'VERT':
+        return [v for v in bm.verts if v.select]
+    elif modo == 'EDGE':
+        return [e for e in bm.edges if e.select]
+    elif modo == 'FACE':
+        return [f for f in bm.faces if f.select]
+    return []
+
+
+def elementGetActivoYOtros(bm, modo):
+    active = bmeshGetElementoActivo(bm)
+
+    if modo == 'VERT' and not isinstance(active, bmesh.types.BMVert):
+        active = None
+    elif modo == 'EDGE' and not isinstance(active, bmesh.types.BMEdge):
+        active = None
+    elif modo == 'FACE' and not isinstance(active, bmesh.types.BMFace):
+        active = None
+
+    seleccionados = mallaGetElementosSeleccionados(bm, modo)
+
+    if active is None and seleccionados:
+        active = seleccionados[0]
+
+    otros = [e for e in seleccionados if e != active]
+
+    return active, otros
 
 
 def sceneGetAllselects(context):
@@ -142,91 +123,325 @@ def sceneGetAllselects(context):
 
         bm = bmesh.from_edit_mesh(obj.data)
         bm.select_history.validate()
-        
+
         select_mode = context.tool_settings.mesh_select_mode[:]
-        
+
         active_element = None
         other_selected_elements = []
 
-        if select_mode[0]:  # Modo Vértices
+        if select_mode[0]:
             active_element = bm.select_history.active
             other_selected_elements = [v for v in bm.verts if v.select and v != active_element]
-        elif select_mode[1]:  # Modo Aristas
+        elif select_mode[1]:
             active_element = bm.select_history.active
             other_selected_elements = [e for e in bm.edges if e.select and e != active_element]
-        elif select_mode[2]:  # Modo Caras
+        elif select_mode[2]:
             active_element = bm.select_history.active
             other_selected_elements = [f for f in bm.faces if f.select and f != active_element]
         else:
             print("Ningún modo de selección de malla (vértices, aristas, caras) está activo.")
-            
+
         bmesh.update_edit_mesh(obj.data)
         bm.free()
-        
+
         return active_element, other_selected_elements
 
     else:
         print(f"Modo no soportado o sin selección: {current_mode}")
-        return None, []    
+        return None, []
+
 
 def verticesFacesEdgesSeleccioandos(obj):
     if obj is None or obj.type != 'MESH':
         print("Error: Se requiere un objeto de malla válido.")
         return []
 
-    # Almacenar el modo actual para restaurarlo más tarde
     original_mode = bpy.context.object.mode
 
-    # Asegurarse de que el objeto esté activo y en Modo Edición
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.mode_set(mode='EDIT')
-    
+
     bm = bmesh.from_edit_mesh(obj.data)
-    
+
     select_mode = bpy.context.tool_settings.mesh_select_mode[:]
-    
+
     selected_elements = []
 
-    if select_mode[0]:  # Modo Vértices
+    if select_mode[0]:
         selected_elements = [v for v in bm.verts if v.select]
         print(f"Modo Vértices. {len(selected_elements)} vértices seleccionados.")
-    elif select_mode[1]: # Modo Aristas
+    elif select_mode[1]:
         selected_elements = [e for e in bm.edges if e.select]
         print(f"Modo Aristas. {len(selected_elements)} aristas seleccionadas.")
-    elif select_mode[2]: # Modo Caras
+    elif select_mode[2]:
         selected_elements = [f for f in bm.faces if f.select]
         print(f"Modo Caras. {len(selected_elements)} caras seleccionadas.")
     else:
         print("Ningún modo de selección de malla (vértices, aristas, caras) está activo.")
-            
-    # Actualizar la malla de Blender con los cambios de bmesh (si los hubiera, aunque aquí no hay)
-    # y liberar bmesh
+
     bmesh.update_edit_mesh(obj.data)
-    bm.free() 
-    
-    # Restaurar el modo original
+    bm.free()
+
     bpy.ops.object.mode_set(mode=original_mode)
-    
+
     return selected_elements
+
+
 def bm(obj):
     mesh = obj.data
     bm = bmesh.from_edit_mesh(mesh)
     bm.verts.ensure_lookup_table()
     bm.edges.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
-    return bm  
+    return bm
+
 
 def objectoMatrixWorld(obj):
     return obj.matrix_world
 
-     
+
 def vertsEdgesFacesModeSeleccion():
-    return  context.tool_settings.mesh_select_mode[:]
-
-
-def objectoModoDeSeleccion(context):
     return context.tool_settings.mesh_select_mode[:]
- 
+
+
+def elementGetCentroLocal(element):
+    if isinstance(element, bmesh.types.BMVert):
+        return element.co.copy()
+    elif isinstance(element, bmesh.types.BMEdge):
+        v1, v2 = element.verts
+        return (v1.co + v2.co) / 2.0
+    elif isinstance(element, bmesh.types.BMFace):
+        return element.calc_center_median()
+    return None
+
+
+def elementGetCentroGlobal(element, matrix_world):
+    if hasattr(element, 'co'):
+        return matrix_world @ element.co
+    avg = sum((v.co for v in element.verts), Vector()) / len(element.verts)
+    return matrix_world @ avg
+
+
+def elementGetVertices(element):
+    if isinstance(element, bmesh.types.BMVert):
+        return [element]
+    elif isinstance(element, bmesh.types.BMEdge):
+        return list(element.verts)
+    elif isinstance(element, bmesh.types.BMFace):
+        return list(element.verts)
+    return []
+
+
+def elementGetNormalGlobal(element, matrix_world):
+    mat3 = matrix_world.to_3x3()
+
+    if isinstance(element, bmesh.types.BMVert):
+        normal = (mat3 @ element.normal).normalized()
+
+    elif isinstance(element, bmesh.types.BMFace):
+        normal = (mat3 @ element.normal).normalized()
+
+    elif isinstance(element, bmesh.types.BMEdge):
+        v1, v2 = element.verts
+        linked_faces = element.link_faces
+        if linked_faces:
+            avg_normal = Vector((0, 0, 0))
+            for f in linked_faces:
+                avg_normal += f.normal
+            avg_normal /= len(linked_faces)
+            normal = (mat3 @ avg_normal).normalized()
+        else:
+            direction = ((matrix_world @ v2.co) - (matrix_world @ v1.co)).normalized()
+            if abs(direction.z) < 0.9:
+                normal = direction.cross(Vector((0, 0, 1))).normalized()
+            else:
+                normal = direction.cross(Vector((1, 0, 0))).normalized()
+    else:
+        return Vector((0, 0, 1))
+
+    if normal.length < 0.001:
+        normal = Vector((0, 0, 1))
+    return normal
+
+
+def objectoGetMatrizOrientacion(context, obj, bm, orientacion):
+    if orientacion == 'GLOBAL':
+        return Matrix.Identity(3)
+    elif orientacion == 'LOCAL':
+        return obj.matrix_world.to_3x3()
+    elif orientacion == 'CURSOR':
+        return context.scene.cursor.matrix.to_3x3()
+    elif orientacion == 'VIEW':
+        if context.space_data and hasattr(context.space_data, 'region_3d'):
+            return context.space_data.region_3d.view_matrix.inverted().to_3x3()
+        return Matrix.Identity(3)
+    elif orientacion == 'NORMAL':
+        active = bm.select_history.active
+        if active:
+            n = active.normal.copy()
+            if abs(n.x) < 0.9:
+                t = Vector((1, 0, 0))
+            else:
+                t = Vector((0, 1, 0))
+            b = n.cross(t).normalized()
+            t2 = b.cross(n).normalized()
+            return Matrix((t2, b, n)).transposed()
+        return Matrix.Identity(3)
+    elif orientacion == 'GIMBAL':
+        return obj.rotation_euler.to_matrix()
+    return Matrix.Identity(3)
+
+
+def meshGetEdgesSeleccionadasGlobal(obj):
+    if not obj or obj.type != 'MESH' or obj.mode != 'EDIT':
+        return []
+    bm = bmesh.from_edit_mesh(obj.data)
+    bm.edges.ensure_lookup_table()
+    mw = obj.matrix_world
+    resultado = []
+    for edge in bm.edges:
+        if edge.select:
+            p1 = mw @ edge.verts[0].co
+            p2 = mw @ edge.verts[1].co
+            resultado.append((p1, p2))
+    bmesh.update_edit_mesh(obj.data)
+    bm.free()
+    return resultado
+
+
+def mallaMirrorGeometria(obj, bm, mirror_x, mirror_y, mirror_z, orient_mat):
+    geom_to_dup = []
+    for v in bm.verts:
+        if v.select:
+            geom_to_dup.append(v)
+    for e in bm.edges:
+        if e.select:
+            geom_to_dup.append(e)
+    for f in bm.faces:
+        if f.select:
+            geom_to_dup.append(f)
+
+    if not geom_to_dup:
+        return None
+
+    for v in bm.verts:
+        v.select = False
+    for e in bm.edges:
+        e.select = False
+    for f in bm.faces:
+        f.select = False
+
+    ret = bmesh.ops.duplicate(bm, geom=geom_to_dup)
+    new_geom = ret['geom']
+    new_verts = [g for g in new_geom if isinstance(g, bmesh.types.BMVert)]
+
+    if not new_verts:
+        return None
+
+    for v in new_verts:
+        v.select = True
+
+    centroid = Vector((0, 0, 0))
+    for v in new_verts:
+        centroid += v.co
+    centroid /= len(new_verts)
+
+    orient_mat_inv = orient_mat.inverted()
+    centroid_custom = orient_mat_inv @ centroid
+
+    if mirror_x:
+        centroid_custom.x *= -1.0
+    if mirror_y:
+        centroid_custom.y *= -1.0
+    if mirror_z:
+        centroid_custom.z *= -1.0
+
+    new_centroid = orient_mat @ centroid_custom
+    offset = new_centroid - centroid
+    for v in new_verts:
+        v.co += offset
+
+    for g in new_geom:
+        g.select = True
+
+    return new_geom
+
+
+def mallaSeleccionarPorRango(obj, bm, modo, vmin, vmax):
+    for v in bm.verts:
+        v.select = False
+    for e in bm.edges:
+        e.select = False
+    for f in bm.faces:
+        f.select = False
+
+    count = 0
+    if modo == 'EDGE':
+        for e in bm.edges:
+            v1, v2 = e.verts
+            length = ((obj.matrix_world @ v1.co) - (obj.matrix_world @ v2.co)).length
+            if vmin <= length <= vmax:
+                e.select = True
+                count += 1
+    elif modo == 'FACE':
+        for f in bm.faces:
+            if vmin <= f.calc_area() <= vmax:
+                f.select = True
+                count += 1
+
+    bm.select_flush_mode()
+    return count
+
+
+def objectoAjustarDistanciaObjeto(obj_active, obj_ref, target_dist):
+    dir_vec = obj_active.location - obj_ref.location
+    if dir_vec.length < 0.0001:
+        return False
+    obj_active.location = obj_ref.location + (dir_vec.normalized() * target_dist)
+    return True
+
+
+def mallaAjustarDistanciaElemento(obj, bm, modo, target_dist):
+    elem_active, otros = elementGetActivoYOtros(bm, modo)
+    elem_ref = otros[0] if otros else None
+
+    if elem_active is None or elem_ref is None:
+        return False
+
+    mat_world = obj.matrix_world
+    center_active_global = elementGetCentroGlobal(elem_active, mat_world)
+    center_ref_global = elementGetCentroGlobal(elem_ref, mat_world)
+    dir_vec_global = center_active_global - center_ref_global
+    if dir_vec_global.length < 0.0001:
+        return False
+
+    new_center_active_global = center_ref_global + (dir_vec_global.normalized() * target_dist)
+    offset_local = mat_world.inverted().to_3x3() @ (new_center_active_global - center_active_global)
+    for v in elementGetVertices(elem_active):
+        v.co += offset_local
+
+    return True
+
+
+def mallaObtenerTargetsPorModo(obj, bm, modo):
+    mat_world = obj.matrix_world
+    targets = []
+
+    if modo == 'VERT':
+        for v in bm.verts:
+            if v.select:
+                targets.append((mat_world @ v.co, elementGetNormalGlobal(v, mat_world)))
+    elif modo == 'EDGE':
+        for e in bm.edges:
+            if e.select:
+                targets.append((elementGetCentroGlobal(e, mat_world), elementGetNormalGlobal(e, mat_world)))
+    elif modo == 'FACE':
+        for f in bm.faces:
+            if f.select:
+                targets.append((elementGetCentroGlobal(f, mat_world), elementGetNormalGlobal(f, mat_world)))
+
+    return targets
+
 
 def objectoDuplicarObjeto(obj):
     if obj is None or obj.type != 'MESH':
@@ -246,58 +461,54 @@ def objectoDuplicarObjeto(obj):
         },
         TRANSFORM_OT_translate={
             "value": (0.0, 0.0, 0.0),
-            "orient_type":'GLOBAL',
-            "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-            "orient_matrix_type":'GLOBAL',
-            "constraint_axis":(False, False, False),
-            "mirror":False,
-            "use_proportional_edit":False,
-            "proportional_edit_falloff":'SMOOTH',
-            "proportional_size":1,
-            "use_proportional_connected":False,
-            "use_proportional_projected":False,
-            "snap":False,
-            "snap_elements":{'INCREMENT'},
-            "use_snap_project":False,
-            "snap_target":'CLOSEST',
-            "use_snap_self":True,
-            "use_snap_edit":True,
-            "use_snap_nonedit":True,
-            "use_snap_selectable":False,
-            "snap_point":(0, 0, 0),
-            "snap_align":False,
-            "snap_normal":(0, 0, 0),
-            "gpencil_strokes":False,
-            "cursor_transform":False,
-            "texture_space":False,
-            "remove_on_cancel":False,
-            "use_duplicated_keyframes":False,
-            "view2d_edge_pan":False,
-            "release_confirm":False,
-            "use_accurate":False,
-            "use_automerge_and_split":False,
-            "translate_origin":False
+            "orient_type": 'GLOBAL',
+            "orient_matrix": ((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+            "orient_matrix_type": 'GLOBAL',
+            "constraint_axis": (False, False, False),
+            "mirror": False,
+            "use_proportional_edit": False,
+            "proportional_edit_falloff": 'SMOOTH',
+            "proportional_size": 1,
+            "use_proportional_connected": False,
+            "use_proportional_projected": False,
+            "snap": False,
+            "snap_elements": {'INCREMENT'},
+            "use_snap_project": False,
+            "snap_target": 'CLOSEST',
+            "use_snap_self": True,
+            "use_snap_edit": True,
+            "use_snap_nonedit": True,
+            "use_snap_selectable": False,
+            "snap_point": (0, 0, 0),
+            "snap_align": False,
+            "snap_normal": (0, 0, 0),
+            "gpencil_strokes": False,
+            "cursor_transform": False,
+            "texture_space": False,
+            "remove_on_cancel": False,
+            "use_duplicated_keyframes": False,
+            "view2d_edge_pan": False,
+            "release_confirm": False,
+            "use_accurate": False,
+            "use_automerge_and_split": False,
+            "translate_origin": False
         }
     )
 
     new_object = bpy.context.active_object
-    #print(f"Objeto duplicado '{obj.name}' creado como '{new_object.name}' en la misma posición.")
     return new_object
 
-def objectoalinearEjeADireccion(
-    obj: bpy.types.Object,
-    direction: mathutils.Vector,
-    axis: str = "Z",
-) -> None:
+
+def objectoalinearEjeADireccion(obj, direction, axis="Z"):
     axis = axis.upper()
     target = direction.normalized()
 
     if target.length < 1e-9:
         raise ValueError("El vector de direccion no puede ser cero.")
 
-    aux = mathutils.Vector((0, 1, 0))
+    aux = Vector((0, 1, 0))
     if abs(target.dot(aux)) > 0.99:
-        aux = mathutils.Vector((1, 0, 0))
+        aux = Vector((1, 0, 0))
 
     if axis == "Z":
         z = target
@@ -314,7 +525,7 @@ def objectoalinearEjeADireccion(
     else:
         raise ValueError(f"Eje '{axis}' no valido. Usa 'X', 'Y' o 'Z'.")
 
-    rot = mathutils.Matrix((
+    rot = Matrix((
         (x.x, y.x, z.x),
         (x.y, y.y, z.y),
         (x.z, y.z, z.z),
@@ -322,18 +533,11 @@ def objectoalinearEjeADireccion(
     obj.rotation_euler = rot.to_euler('XYZ')
 
 
-def objectoSetGlobalPostion(obj, x: float, y: float, z: float) -> None:
-    """
-    Coloca el origen del objeto en la posicion global (x, y, z).
+def objectoSetGlobalPostion(obj, x, y, z):
+    obj.location = Vector((x, y, z))
 
-    Parametros
-    ----------
-    obj       : bpy.types.Object
-    x, y, z   : float  - coordenadas en espacio global (metros)
-    """
-    obj.location = mathutils.Vector((x, y, z))
 
-def objectoSetDimencion(obj: bpy.types.Object, value: float, axis: str = "Z") -> None:
+def objectoSetDimencion(obj, value, axis="Z"):
     axis = axis.upper()
     idx = {"X": 0, "Y": 1, "Z": 2}[axis]
 
@@ -345,7 +549,7 @@ def objectoSetDimencion(obj: bpy.types.Object, value: float, axis: str = "Z") ->
     scale = list(obj.scale)
     scale[idx] *= factor
     obj.scale = scale
-    
+
     original_active = bpy.context.view_layer.objects.active
     original_selection = bpy.context.selected_objects[:]
 
@@ -353,7 +557,7 @@ def objectoSetDimencion(obj: bpy.types.Object, value: float, axis: str = "Z") ->
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
-        
+
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     finally:
         bpy.ops.object.select_all(action='DESELECT')
@@ -361,11 +565,161 @@ def objectoSetDimencion(obj: bpy.types.Object, value: float, axis: str = "Z") ->
             o.select_set(True)
         bpy.context.view_layer.objects.active = original_active
 
+
+def objectoClonarYColocar(
+    source,
+    pos1,
+    pos2,
+    scale_x=False,
+    scale_y=False,
+    scale_z=True,
+    align_axis="Z",
+):
+    direccion = pos2 - pos1
+    distancia = direccion.length
+    if distancia < 1e-6:
+        return None
+
+    clone = objectoDuplicarObjeto(source)
+    if clone is None:
+        return None
+
+    clone.name = source.name + "_clone"
+
+    if scale_x:
+        objectoSetDimencion(clone, distancia, "X")
+    if scale_y:
+        objectoSetDimencion(clone, distancia, "Y")
+    if scale_z:
+        objectoSetDimencion(clone, distancia, "Z")
+
+    objectoSetGlobalPostion(clone, pos1.x, pos1.y, pos1.z)
+
+    objectoalinearEjeADireccion(clone, direccion, align_axis)
+
+    return clone
+
+
+def coleccionExiste(nombre):
+    return bpy.data.collections.get(nombre) is not None
+
+
+def coleccionCrear(nombre, parent_collection=None):
+    coleccion = bpy.data.collections.new(nombre)
+    if parent_collection is None:
+        parent_collection = bpy.context.scene.collection
+    parent_collection.children.link(coleccion)
+    return coleccion
+
+
+def coleccionObtenerOCrear(nombre, parent_collection=None):
+    coleccion = bpy.data.collections.get(nombre)
+    if coleccion is None:
+        coleccion = coleccionCrear(nombre, parent_collection)
+    return coleccion
+
+
+def objectoAñadirAColeccion(obj, coleccion, remover_de_otras=False):
+    if remover_de_otras:
+        for col in obj.users_collection:
+            col.objects.unlink(obj)
+    if obj.name not in coleccion.objects:
+        coleccion.objects.link(obj)
+    return obj
+
+
+def objectoRemoverDeColeccion(obj, coleccion):
+    if obj.name in coleccion.objects:
+        coleccion.objects.unlink(obj)
+    return obj
+
+
+def coleccionGetObjetos(nombre):
+    coleccion = bpy.data.collections.get(nombre)
+    if coleccion is None:
+        return []
+    return list(coleccion.objects)
+
+
+def coleccionEliminar(nombre, eliminar_objetos=False):
+    coleccion = bpy.data.collections.get(nombre)
+    if coleccion is None:
+        return False
+    if eliminar_objetos:
+        for obj in list(coleccion.objects):
+            bpy.data.objects.remove(obj, do_unlink=True)
+    bpy.data.collections.remove(coleccion)
+    return True
+
+
+def objectoClonarEnPosiciones(
+    valid_refs,
+    targets,
+    track_axis="Z",
+    up_axis="Y",
+    use_advanced=False,
+    rot_ranges=None,
+    scl_ranges=None,
+    collection_name="creates",
+):
+    if rot_ranges is None:
+        rot_ranges = {}
+    if scl_ranges is None:
+        scl_ranges = {}
+
+    creates_collection = coleccionObtenerOCrear(collection_name)
+
+    creados = []
+
+    for i, (pos, normal_dir) in enumerate(targets):
+        ref_obj = valid_refs[i % len(valid_refs)]
+
+        new_obj = ref_obj.copy()
+        new_obj.data = ref_obj.data.copy()
+        objectoAñadirAColeccion(new_obj, creates_collection)
+
+        align_quat = normal_dir.to_track_quat(track_axis, up_axis)
+
+        if use_advanced:
+            eul_local = Euler((0.0, 0.0, 0.0), 'XYZ')
+
+            if rot_ranges.get('x'):
+                eul_local.x = math.radians(random.uniform(*rot_ranges['x']))
+            if rot_ranges.get('y'):
+                eul_local.y = math.radians(random.uniform(*rot_ranges['y']))
+            if rot_ranges.get('z'):
+                eul_local.z = math.radians(random.uniform(*rot_ranges['z']))
+
+            random_quat = eul_local.to_quaternion()
+            final_quat = align_quat @ random_quat
+        else:
+            final_quat = align_quat
+
+        new_obj.location = pos
+        new_obj.rotation_mode = 'QUATERNION'
+        new_obj.rotation_quaternion = final_quat
+
+        new_obj.scale = ref_obj.scale.copy()
+
+        if use_advanced:
+            if scl_ranges.get('x'):
+                new_obj.scale.x *= random.uniform(*scl_ranges['x'])
+            if scl_ranges.get('y'):
+                new_obj.scale.y *= random.uniform(*scl_ranges['y'])
+            if scl_ranges.get('z'):
+                new_obj.scale.z *= random.uniform(*scl_ranges['z'])
+
+        new_obj.select_set(False)
+        creados.append(new_obj)
+
+    return creados
+
+
 def sceneGetObjectProperties(obj):
     if obj.type != 'MESH':
         dimensions = Vector((0, 0, 0))
     else:
-        dimensions = obj.dimensions 
+        dimensions = obj.dimensions
     pos_local = obj.location
     pos_global = obj.matrix_world.translation
     obj_rot_matrix = obj.matrix_world.to_3x3().normalized()
@@ -375,7 +729,7 @@ def sceneGetObjectProperties(obj):
     return {
         'name': obj.name,
         'isActive': (obj == bpy.context.active_object),
-        'dimensions': dimensions, 
+        'dimensions': dimensions,
         'posLocal': pos_local,
         'posGlobal': pos_global,
         'x': vec_x_local_global,
@@ -388,31 +742,7 @@ def sceneGetObjetosScene():
     objects = bpy.context.scene.objects
     object_properties = [sceneGetObjectProperties(obj) for obj in objects]
     return object_properties
- 
- 
- 
- 
-def sceneGetObjectProperties(obj):  
-    if obj.type != 'MESH':
-        dimensions = Vector((0,0,0))
-    else:
-        dimensions = obj.dimensions 
-    pos_local = obj.location
-    pos_global = obj.matrix_world.translation
-    obj_rot_matrix = obj.matrix_world.to_3x3().normalized()
-    vec_x_local_global = obj_rot_matrix @ Vector((1, 0, 0))
-    vec_y_local_global = obj_rot_matrix @ Vector((0, 1, 0))
-    vec_z_local_global = obj_rot_matrix @ Vector((0, 0, 1))
-    return {
-        'name': obj.name,
-        'isActive': (obj == bpy.context.active_object),
-        'dimensions': dimensions, 
-        'posLocal': pos_local,
-        'posGlobal': pos_global,
-        'x': vec_x_local_global,
-        'y': vec_y_local_global,
-        'z': vec_z_local_global,
-    }
+
 
 def get_selected_scene_objects_info():
     selected_objects_info = []
@@ -422,18 +752,21 @@ def get_selected_scene_objects_info():
     for obj in bpy.context.selected_objects:
         obj_info = sceneGetObjectProperties(obj)
         selected_objects_info.append(obj_info)
-        
+
     return selected_objects_info
+
+
 def is_face_selected(face):
     return face.select
+
 
 def get_face_properties(face, obj_matrix_world):
     face_index = face.index
     face_normal = face.normal
-    face_area = face.calc_area() 
+    face_area = face.calc_area()
     face_center_local = sum([v.co for v in face.verts], Vector()) / len(face.verts)
     face_center_global = obj_matrix_world @ face_center_local
-    
+
     return {
         'area': face_area,
         'index': face_index,
@@ -441,6 +774,7 @@ def get_face_properties(face, obj_matrix_world):
         'posGlobal': face_center_global,
         'normal': face_normal,
     }
+
 
 def facesIterateObjectFaces(obj):
     if not obj or obj.mode != 'EDIT':
@@ -455,22 +789,24 @@ def facesIterateObjectFaces(obj):
         if is_face_selected(face):
             properties = get_face_properties(face, obj_matrix_world)
             selected_properties.append(properties)
-    
+
     return selected_properties
+
 
 def is_edge_selected(edge):
     return edge.select
 
+
 def get_edge_properties(edge, obj_matrix_world):
     edge_index = edge.index
     edge_length = edge.calc_length()
-    
+
     edge_center_local = (edge.verts[0].co + edge.verts[1].co) / 2
     edge_center_global = obj_matrix_world @ edge_center_local
-    
+
     connected_face_normals = [f.normal for f in edge.link_faces]
     connected_face_indices = [f.index for f in edge.link_faces]
-    
+
     return {
         'length': edge_length,
         'index': edge_index,
@@ -480,6 +816,7 @@ def get_edge_properties(edge, obj_matrix_world):
         'connectedFaceNormals': connected_face_normals,
         'connectedFaceIndices': connected_face_indices,
     }
+
 
 def edgesIterateObjectEdges(obj):
     if not obj or obj.mode != 'EDIT':
@@ -494,22 +831,24 @@ def edgesIterateObjectEdges(obj):
         if is_edge_selected(edge):
             properties = get_edge_properties(edge, obj_matrix_world)
             selected_properties.append(properties)
-            
+
     return selected_properties
+
 
 def is_vertex_selected(vert):
     return vert.select
+
 
 def verticegetProperties(vert, obj_matrix_world):
     vert_index = vert.index
     vert_co_local = vert.co
     vert_co_global = obj_matrix_world @ vert_co_local
-    
+
     vert_normal = vert.normal
 
     connected_face_indices = [f.index for f in vert.link_faces]
     connected_face_normals = [f.normal for f in vert.link_faces]
-    
+
     return {
         'index': vert_index,
         'posLocal': vert_co_local,
@@ -518,6 +857,7 @@ def verticegetProperties(vert, obj_matrix_world):
         'connectedFaceIndices': connected_face_indices,
         'connectedFaceNormals': connected_face_normals,
     }
+
 
 def verticesiterate_object_vertices(obj):
     if not obj or obj.mode != 'EDIT':
@@ -532,26 +872,8 @@ def verticesiterate_object_vertices(obj):
         if is_vertex_selected(vert):
             properties = verticegetProperties(vert, obj_matrix_world)
             selected_properties.append(properties)
-            
+
     return selected_properties
 
-if __name__ == "__main__":
-    active_obj = bpy.context.edit_object
-    
-    if active_obj:
-        print(f"Processing for object: {active_obj.name}\n")
 
-        print("--- SELECTED FACES ---")
-        faces_data = facesIterateObjectFaces(active_obj)
-        print(f"\nTotal selected faces found: {len(faces_data)}\n")
-
-        print("--- SELECTED EDGES ---")
-        edges_data = edgesIterateObjectEdges(active_obj)
-        print(f"\nTotal selected edges found: {len(edges_data)}\n")
-
-        print("--- SELECTED VERTICES ---")
-        vertices_data = verticesiterate_object_vertices(active_obj)
-        print(f"\nTotal selected vertices found: {len(vertices_data)}\n")
-
-    else:
-        print("No object is in edit mode or selected for processing.")
+ 
