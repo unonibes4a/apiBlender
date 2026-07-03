@@ -876,4 +876,277 @@ def verticesiterate_object_vertices(obj):
     return selected_properties
 
 
+
+
+import bpy
+import os
+import tempfile
+import math
+from mathutils import Vector
+
+
+def objectoGetMeshActivo(context):
+    obj = context.active_object
+    if obj is None or obj.type != 'MESH':
+        return None, None
+    return obj, obj.data
+
+
+def objectoGetZStats(obj):
+    wm = obj.matrix_world
+    z_vals = [(wm @ v.co).z for v in obj.data.vertices]
+    z_max = max(z_vals)
+    z_min = min(z_vals)
+    z_mid = (z_max + z_min) * 0.5
+    return z_max, z_min, z_mid
+
+
+def mallaAsegurarVertexColors(mesh, name="VertexCol"):
+    if name not in mesh.vertex_colors:
+        mesh.vertex_colors.new(name=name)
+    vc_layer = mesh.vertex_colors[name]
+    mesh.vertex_colors.active = vc_layer
+    return vc_layer
+
+
+def mallaPintarVertexColors(obj, vert_values, name="VertexCol"):
+    mesh = obj.data
+    vc_layer = mallaAsegurarVertexColors(mesh, name)
+    for poly in mesh.polygons:
+        for loop_idx in poly.loop_indices:
+            vert_idx = mesh.loops[loop_idx].vertex_index
+            val = vert_values[vert_idx]
+            vc_layer.data[loop_idx].color = (val, val, val, 1.0)
+    mesh.update()
+
+
+def materialSetupEmisionBake(obj, vc_name="VertexCol", mat_name="EmisionBake"):
+    if mat_name in bpy.data.materials:
+        mat = bpy.data.materials[mat_name]
+    else:
+        mat = bpy.data.materials.new(name=mat_name)
+
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+
+    for node in list(nodes):
+        nodes.remove(node)
+
+    vc_node = nodes.new(type='ShaderNodeVertexColor')
+    vc_node.layer_name = vc_name
+    vc_node.location = (-400, 0)
+
+    emission = nodes.new(type='ShaderNodeEmission')
+    emission.location = (0, 0)
+
+    out_node = nodes.new(type='ShaderNodeOutputMaterial')
+    out_node.location = (300, 0)
+
+    img_node = nodes.new(type='ShaderNodeTexImage')
+    img_node.location = (0, -250)
+
+    links.new(vc_node.outputs['Color'], emission.inputs['Color'])
+    links.new(emission.outputs['Emission'], out_node.inputs['Surface'])
+
+    if len(obj.data.materials) == 0:
+        obj.data.materials.append(mat)
+    else:
+        obj.data.materials[0] = mat
+
+    for node in nodes:
+        node.select = False
+    img_node.select = True
+    nodes.active = img_node
+    return img_node
+
+
+def materialSetupAO(obj, mat_name="AO_Material"):
+    mat = bpy.data.materials.new(name=mat_name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+
+    for node in list(nodes):
+        nodes.remove(node)
+
+    principled_bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
+    principled_bsdf.location = (200, 0)
+
+    material_output = nodes.new(type='ShaderNodeOutputMaterial')
+    material_output.location = (400, 0)
+
+    ao_node = nodes.new(type='ShaderNodeAmbientOcclusion')
+    ao_node.location = (-600, 200)
+    ao_node.samples = 16
+    ao_node.inputs['Distance'].default_value = 1.0
+
+    color_ramp = nodes.new(type='ShaderNodeValToRGB')
+    color_ramp.location = (-200, 200)
+
+    elements = color_ramp.color_ramp.elements
+    while len(elements) > 1:
+        elements.remove(elements[-1])
+    elements[0].position = 0.0
+    elements[0].color = (0.0, 0.0, 0.0, 1.0)
+    e1 = elements.new(0.793)
+    e1.color = (0.25, 0.25, 0.25, 1.0)
+    e2 = elements.new(0.95)
+    e2.color = (0.5, 0.5, 0.5, 1.0)
+    e3 = elements.new(1.0)
+    e3.color = (1.0, 1.0, 1.0, 1.0)
+
+    ao_image_texture_node = nodes.new(type='ShaderNodeTexImage')
+    ao_image_texture_node.location = (-600, -200)
+
+    links.new(ao_node.outputs['Color'], color_ramp.inputs['Fac'])
+    links.new(color_ramp.outputs['Color'], principled_bsdf.inputs['Base Color'])
+    links.new(principled_bsdf.outputs['BSDF'], material_output.inputs['Surface'])
+
+    if obj.data.materials:
+        obj.data.materials[0] = mat
+    else:
+        obj.data.materials.append(mat)
+
+    for node in nodes:
+        node.select = False
+    ao_image_texture_node.select = True
+    nodes.active = ao_image_texture_node
+
+    return ao_image_texture_node
+
+
+def bakeEmitAImagen(context, obj, resolucion, nombre_imagen="Baked", nombre_archivo="Baked.png"):
+    if nombre_imagen in bpy.data.images:
+        bpy.data.images.remove(bpy.data.images[nombre_imagen])
+
+    bake_img = bpy.data.images.new(
+        name=nombre_imagen, width=resolucion, height=resolucion,
+        alpha=False, float_buffer=False
+    )
+
+    mat = obj.data.materials[0]
+    for nd in mat.node_tree.nodes:
+        if nd.type == 'TEX_IMAGE':
+            nd.image = bake_img
+            for node in mat.node_tree.nodes:
+                node.select = False
+            nd.select = True
+            mat.node_tree.nodes.active = nd
+            break
+
+    if context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    context.view_layer.objects.active = obj
+
+    context.scene.render.engine = 'CYCLES'
+    context.scene.render.bake.use_pass_direct = False
+    context.scene.render.bake.use_pass_indirect = False
+    context.scene.render.bake.use_pass_color = False
+
+    try:
+        bpy.ops.object.bake(type='EMIT', save_mode='INTERNAL')
+    except RuntimeError as e:
+        return f"ERROR: {e}"
+
+    blend_dir = bpy.path.abspath("//")
+    out_path = os.path.join(
+        blend_dir if (blend_dir and os.path.isdir(blend_dir)) else tempfile.gettempdir(),
+        nombre_archivo
+    )
+    bake_img.filepath_raw = out_path
+    bake_img.file_format = 'PNG'
+    bake_img.save_render(filepath=out_path)
+    return out_path
+
+
+def bakeAOAImagen(context, obj, ao_img_node, resolucion, nombre_imagen="AO_Baked", nombre_archivo="AO_Baked.png", device='GPU'):
+    if nombre_imagen in bpy.data.images:
+        bpy.data.images.remove(bpy.data.images[nombre_imagen])
+
+    bake_img = bpy.data.images.new(
+        name=nombre_imagen, width=resolucion, height=resolucion,
+        alpha=False, float_buffer=False
+    )
+    ao_img_node.image = bake_img
+
+    if context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    context.view_layer.objects.active = obj
+
+    context.scene.render.engine = 'CYCLES'
+    context.scene.cycles.device = device
+    context.scene.render.bake.use_pass_direct = False
+    context.scene.render.bake.use_pass_indirect = False
+    context.scene.render.bake.use_pass_color = False
+
+    try:
+        bpy.ops.object.bake(type='AO', save_mode='INTERNAL')
+    except RuntimeError as e:
+        return f"ERROR: {e}"
+
+    blend_dir = bpy.path.abspath("//")
+    out_path = os.path.join(
+        blend_dir if (blend_dir and os.path.isdir(blend_dir)) else tempfile.gettempdir(),
+        nombre_archivo
+    )
+    bake_img.filepath_raw = out_path
+    bake_img.file_format = 'PNG'
+    bake_img.save_render(filepath=out_path)
+    return out_path
+
+
+def anguloNormalVsEje(normal, eje=None):
+    if eje is None:
+        eje = Vector((0.0, 0.0, 1.0))
+    n = normal.normalized()
+    dot = max(-1.0, min(1.0, n.dot(eje)))
+    angle = math.degrees(math.acos(dot))
+    if angle < 0:
+        angle = angle * -1.0
+    return angle
+
+
+def anguloNormalMundoVsEje(normal_local, matrix_world, eje=None):
+    if eje is None:
+        eje = Vector((0.0, 0.0, 1.0))
+    normal_mat = matrix_world.to_3x3().inverted().transposed()
+    world_normal = (normal_mat @ normal_local).normalized()
+    dot = max(-1.0, min(1.0, world_normal.dot(eje)))
+    return math.degrees(math.acos(dot))
+
+
+def pesoLinealZ(z, z_min, z_max, val_min=0.4, val_max=1.0):
+    denom = (z_max - z_min) if (z_max - z_min) != 0 else 1.0
+    t = max(0.0, min(1.0, (z - z_min) / denom))
+    return val_min + t * (val_max - val_min)
+
+
+def pesoSimetricoZ(z, z_mid, z_max, val_min=0.4, val_max=1.0, invertido=False):
+    denom = (z_max - z_mid) if (z_max - z_mid) != 0 else 1.0
+    t = max(0.0, min(1.0, abs(z - z_mid) / denom))
+    if invertido:
+        return val_max - t * (val_max - val_min)
+    return val_min + t * (val_max - val_min)
+
+
+def pesoAnguloPolinomialGio(angle_deg, minimo=0.25):
+    val = 1.0 - 0.0061 * angle_deg + 0.000030864 * angle_deg * angle_deg
+    if val < minimo:
+        val = minimo
+    return val
+
+
+def pesoAOPolinomial(angle_deg):
+    x = abs(angle_deg)
+    y = (1
+         - 0.0855 * x
+         + 0.0015 * x ** 2
+         - 0.0000087284 * x ** 3
+         + 1.5571e-8 * x ** 4)
+    return max(0.0, min(1.0, y))
  
