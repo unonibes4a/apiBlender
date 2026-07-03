@@ -1150,3 +1150,382 @@ def pesoAOPolinomial(angle_deg):
          + 1.5571e-8 * x ** 4)
     return max(0.0, min(1.0, y))
  
+
+import bpy
+import bmesh
+import numpy as np
+import math
+from mathutils import Vector, Matrix
+
+
+def utilRotarPuntosAlrededorEje(points, axis_start, axis_direction, angle_degrees):
+    angle_rad = math.radians(angle_degrees)
+    axis_normalized = axis_direction.normalized()
+    rotation_matrix = Matrix.Rotation(angle_rad, 4, axis_normalized)
+    rotated_points = []
+    for point in points:
+        relative_point = point - axis_start
+        rotated_relative = rotation_matrix @ relative_point
+        rotated_points.append(rotated_relative + axis_start)
+    return rotated_points
+
+
+def mallaCrearArco(p1, p2, arc_type='CIRCULAR', height_factor=0.3, num_verts=20, curvature=1.0, rotation_angle=0.0, nombre="ArcoExtendido"):
+    mesh = bpy.data.meshes.new(nombre)
+    obj = bpy.data.objects.new(nombre, mesh)
+    bpy.context.collection.objects.link(obj)
+
+    direction_vector = p2 - p1
+    distance = direction_vector.length
+    if distance == 0:
+        raise ValueError("Los puntos no pueden ser identicos")
+
+    direction_normalized = direction_vector.normalized()
+    up_vector = Vector((0, 0, 1))
+    if abs(direction_normalized.dot(up_vector)) > 0.9:
+        up_vector = Vector((1, 0, 0))
+    perpendicular = direction_normalized.cross(up_vector).normalized()
+    arc_height = distance * height_factor
+    center_point = (p1 + p2) * 0.5
+    verts = []
+
+    if arc_type == 'CIRCULAR':
+        if arc_height <= 0:
+            arc_height = distance * 0.1
+        radius = (distance * distance + 4 * arc_height * arc_height) / (8 * arc_height)
+        arc_center = center_point + perpendicular * (radius - arc_height)
+        vec_to_p1 = p1 - arc_center
+        vec_to_p2 = p2 - arc_center
+        angle_start = math.atan2(vec_to_p1.dot(perpendicular), vec_to_p1.dot(direction_normalized))
+        angle_end = math.atan2(vec_to_p2.dot(perpendicular), vec_to_p2.dot(direction_normalized))
+        if angle_end < angle_start:
+            angle_end += 2 * math.pi
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            angle = angle_start + t * (angle_end - angle_start)
+            point = arc_center + radius * (math.cos(angle) * direction_normalized + math.sin(angle) * perpendicular)
+            verts.append(point)
+    elif arc_type == 'PARABOLIC':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            linear_point = p1 + t * direction_vector
+            parabolic_height = 4 * arc_height * t * (1 - t)
+            point = linear_point + parabolic_height * perpendicular
+            verts.append(point)
+    elif arc_type == 'PARABOLIC_2':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            x = t * distance
+            y = arc_height * (1 - (2 * t - 1) ** 2)
+            point = p1 + x * direction_normalized + y * perpendicular
+            verts.append(point)
+    elif arc_type == 'ELLIPTIC':
+        semi_major = distance / 2
+        semi_minor = arc_height
+        ellipse_center = center_point
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            angle = math.pi * t
+            x_ellipse = semi_major * math.cos(angle)
+            y_ellipse = semi_minor * math.sin(angle)
+            point = ellipse_center + x_ellipse * direction_normalized + y_ellipse * perpendicular
+            verts.append(point)
+    elif arc_type == 'ELLIPTIC_2':
+        a = distance / 2
+        b = arc_height
+        center = center_point
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            angle = math.pi * t
+            x = a * math.cos(angle)
+            y = b * math.sin(angle)
+            point = center + x * direction_normalized + y * perpendicular
+            verts.append(point)
+    elif arc_type == 'CATENARY':
+        a = distance / (2 * math.sinh(arc_height / distance)) if arc_height > 0 else distance / 4
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            x = (t - 0.5) * distance
+            y = a * (math.cosh(x / a) - 1)
+            linear_point = p1 + t * direction_vector
+            point = linear_point + y * perpendicular
+            verts.append(point)
+    elif arc_type == 'HYPERBOLIC':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            x = (t - 0.5) * distance * 2
+            y = arc_height * math.sqrt(1 + (x / distance) ** 2) - arc_height
+            linear_point = p1 + t * direction_vector
+            point = linear_point + y * perpendicular
+            verts.append(point)
+    elif arc_type == 'HYPERBOLIC_2':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            x = t * distance
+            y = arc_height / (1 + 10 * t) if t < 1 else 0
+            point = p1 + x * direction_normalized + y * perpendicular
+            verts.append(point)
+    elif arc_type == 'CUBIC':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            cubic_height = arc_height * (3 * t * t - 2 * t * t * t) * (1 - (2 * t - 1) ** 2)
+            linear_point = p1 + t * direction_vector
+            point = linear_point + cubic_height * perpendicular
+            verts.append(point)
+    elif arc_type == 'SINUSOIDAL':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            sin_height = arc_height * math.sin(math.pi * t)
+            linear_point = p1 + t * direction_vector
+            point = linear_point + sin_height * perpendicular
+            verts.append(point)
+    elif arc_type == 'EXPONENTIAL':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            exp_factor = curvature * 2
+            if t <= 0.5:
+                exp_height = arc_height * (math.exp(exp_factor * t) - 1) / (math.exp(exp_factor * 0.5) - 1)
+            else:
+                exp_height = arc_height * (math.exp(exp_factor * (1 - t)) - 1) / (math.exp(exp_factor * 0.5) - 1)
+            linear_point = p1 + t * direction_vector
+            point = linear_point + exp_height * perpendicular
+            verts.append(point)
+    elif arc_type == 'GOTHIC':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            if t <= 0.5:
+                angle = math.pi * t
+                radius = distance / 2
+                center = p1 + (distance / 4) * direction_normalized
+                point = center + radius * (math.cos(angle) * direction_normalized + math.sin(angle) * perpendicular)
+            else:
+                angle = math.pi * (t - 0.5)
+                radius = distance / 2
+                center = p2 - (distance / 4) * direction_normalized
+                point = center + radius * (math.cos(math.pi - angle) * direction_normalized + math.sin(math.pi - angle) * perpendicular)
+            verts.append(point)
+    elif arc_type == 'SPIRAL':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            spiral_angle = curvature * math.pi * t
+            spiral_radius = arc_height * (1 - t)
+            spiral_x = spiral_radius * math.cos(spiral_angle)
+            spiral_y = spiral_radius * math.sin(spiral_angle)
+            linear_point = p1 + t * direction_vector
+            binormal = direction_normalized.cross(perpendicular)
+            point = linear_point + spiral_x * perpendicular + spiral_y * binormal
+            verts.append(point)
+    elif arc_type == 'BEZIER_QUAD':
+        control_point = center_point + arc_height * perpendicular
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            point = (1 - t) ** 2 * p1 + 2 * (1 - t) * t * control_point + t ** 2 * p2
+            verts.append(point)
+    elif arc_type == 'BEZIER_CUBIC':
+        control1 = p1 + (distance / 3) * direction_normalized + (arc_height * 0.5) * perpendicular
+        control2 = p2 - (distance / 3) * direction_normalized + (arc_height * 0.5) * perpendicular
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            point = ((1 - t) ** 3 * p1 + 3 * (1 - t) ** 2 * t * control1 + 3 * (1 - t) * t ** 2 * control2 + t ** 3 * p2)
+            verts.append(point)
+    elif arc_type == 'BEZIER_CUBIC_2':
+        control1 = p1 + (distance / 4) * direction_normalized + (arc_height * 0.8) * perpendicular
+        control2 = p2 - (distance / 4) * direction_normalized + (arc_height * 0.8) * perpendicular
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            point = ((1 - t) ** 3 * p1 + 3 * (1 - t) ** 2 * t * control1 + 3 * (1 - t) * t ** 2 * control2 + t ** 3 * p2)
+            verts.append(point)
+    elif arc_type == 'LINEAR':
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            point = p1 + t * direction_vector
+            verts.append(point)
+
+    if abs(rotation_angle) > 0.001:
+        verts = utilRotarPuntosAlrededorEje(verts, p1, direction_vector, rotation_angle)
+
+    edges = [(i, i + 1) for i in range(len(verts) - 1)]
+    mesh.from_pydata(verts, edges, [])
+    mesh.update()
+    return obj
+
+
+def curvaCoeficienteBinomial(n, k):
+    if k > n or k < 0:
+        return 0
+    if k == 0 or k == n:
+        return 1
+    result = 1
+    for i in range(min(k, n - k)):
+        result = result * (n - i) // (i + 1)
+    return result
+
+
+def curvaEvaluarBezier(control_points, t):
+    n = len(control_points)
+    if n == 1:
+        return control_points[0]
+    points = [Vector(p) for p in control_points]
+    for r in range(1, n):
+        for i in range(n - r):
+            points[i] = (1 - t) * points[i] + t * points[i + 1]
+    return points[0]
+
+
+def curvaEvaluarBezierBernstein(control_points, t):
+    n = len(control_points) - 1
+    point = Vector((0, 0, 0))
+    for i in range(n + 1):
+        bernstein = curvaCoeficienteBinomial(n, i) * (t ** i) * ((1 - t) ** (n - i))
+        point += bernstein * Vector(control_points[i])
+    return point
+
+
+def curvaBezierMultiPunto(control_points, num_points):
+    if len(control_points) < 2:
+        raise ValueError("Minimo 2 puntos de control")
+    points = []
+    for i in range(num_points):
+        t = i / (num_points - 1)
+        points.append(curvaEvaluarBezier(control_points, t))
+    return points
+
+
+def curvaRegresionPolinomial3D(points, degree=3):
+    if len(points) < degree + 1:
+        degree = max(1, len(points) - 1)
+    points_array = np.array([(p[0], p[1], p[2]) for p in points])
+    t_values = [0]
+    for i in range(1, len(points)):
+        dist = np.linalg.norm(points_array[i] - points_array[i - 1])
+        t_values.append(t_values[-1] + dist)
+    t_max = t_values[-1]
+    if t_max > 0:
+        t_values = [t / t_max for t in t_values]
+    t_array = np.array(t_values)
+    coeffs_x = np.polyfit(t_array, points_array[:, 0], degree)
+    coeffs_y = np.polyfit(t_array, points_array[:, 1], degree)
+    coeffs_z = np.polyfit(t_array, points_array[:, 2], degree)
+    return coeffs_x, coeffs_y, coeffs_z
+
+
+def curvaEvaluarPolinomio3D(coeffs_x, coeffs_y, coeffs_z, t):
+    x = np.polyval(coeffs_x, t)
+    y = np.polyval(coeffs_y, t)
+    z = np.polyval(coeffs_z, t)
+    return Vector((x, y, z))
+
+
+def mallaCrearCurvaPolinomial(control_points, num_verts=20, degree=3, curve_type='polynomial', rotation_angle=0.0):
+    if len(control_points) < 2:
+        raise ValueError("Minimo 2 puntos")
+
+    axis_direction = control_points[-1] - control_points[0]
+    axis_start = control_points[0]
+
+    if curve_type == 'bezier':
+        curve_points = curvaBezierMultiPunto(control_points, num_verts)
+    elif curve_type == 'bezier_bernstein':
+        curve_points = []
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            curve_points.append(curvaEvaluarBezierBernstein(control_points, t))
+    else:
+        max_degree = len(control_points) - 1
+        if degree > max_degree:
+            degree = max_degree
+        coeffs_x, coeffs_y, coeffs_z = curvaRegresionPolinomial3D(control_points, degree)
+        curve_points = []
+        for i in range(num_verts):
+            t = i / (num_verts - 1)
+            curve_points.append(curvaEvaluarPolinomio3D(coeffs_x, coeffs_y, coeffs_z, t))
+
+    if abs(rotation_angle) > 0.001:
+        curve_points = utilRotarPuntosAlrededorEje(curve_points, axis_start, axis_direction, rotation_angle)
+
+    mesh_name = f"Curva{curve_type.title()}"
+    mesh = bpy.data.meshes.new(mesh_name)
+    obj = bpy.data.objects.new(f"{mesh_name}Obj", mesh)
+    bpy.context.collection.objects.link(obj)
+    edges = [(i, i + 1) for i in range(len(curve_points) - 1)]
+    mesh.from_pydata(curve_points, edges, [])
+    mesh.update()
+    return obj
+
+
+def elementGetPosicionPorModo(context, obj, bm, capture_mode):
+    if context.mode != 'EDIT_MESH':
+        return None, None
+
+    if capture_mode == 'VERT':
+        if bm.select_history and isinstance(bm.select_history[-1], bmesh.types.BMVert):
+            elem = bm.select_history[-1]
+            pos = obj.matrix_world @ elem.co
+            key = (obj.name, 'VERT', elem.index)
+            return pos, key
+    elif capture_mode == 'EDGE':
+        if bm.select_history and isinstance(bm.select_history[-1], bmesh.types.BMEdge):
+            elem = bm.select_history[-1]
+            mid = (elem.verts[0].co + elem.verts[1].co) / 2
+            pos = obj.matrix_world @ mid
+            key = (obj.name, 'EDGE', elem.index)
+            return pos, key
+    elif capture_mode == 'FACE':
+        if bm.select_history and isinstance(bm.select_history[-1], bmesh.types.BMFace):
+            elem = bm.select_history[-1]
+            pos = obj.matrix_world @ elem.calc_center_median()
+            key = (obj.name, 'FACE', elem.index)
+            return pos, key
+
+    return None, None
+
+
+def objectoGetPosicionActiva(context):
+    if context.mode != 'OBJECT':
+        return None, None
+    active_obj = context.active_object
+    if not active_obj or active_obj.type != 'MESH':
+        return None, None
+    pos = active_obj.location.copy()
+    key = (active_obj.name, 'OBJECT', 0)
+    return pos, key
+
+
+def capturarPosicionActiva(context, capture_mode):
+    if capture_mode == 'OBJECT':
+        return objectoGetPosicionActiva(context)
+
+    obj = context.active_object
+    if not obj or obj.type != 'MESH' or context.mode != 'EDIT_MESH':
+        return None, None
+
+    bm = bmesh.from_edit_mesh(obj.data)
+    return elementGetPosicionPorModo(context, obj, bm, capture_mode)
+
+
+def listaPuntosControlAgregar(lista_puntos, key, pos_global, max_puntos):
+    obj_name, elem_type, elem_index = key
+
+    is_new = not any(
+        v['obj_name'] == obj_name and v['element_type'] == elem_type and v['index'] == elem_index
+        for v in lista_puntos
+    )
+
+    if not is_new:
+        return False
+
+    if len(lista_puntos) >= max_puntos:
+        lista_puntos.pop(0)
+
+    lista_puntos.append({
+        'obj_name': obj_name,
+        'index': elem_index,
+        'element_type': elem_type,
+        'global_pos': pos_global.to_tuple(),
+    })
+
+    return True
+
+
+def listaPuntosControlLimpiar(lista_puntos):
+    lista_puntos.clear()
